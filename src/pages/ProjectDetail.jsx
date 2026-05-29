@@ -423,16 +423,16 @@ export default function ProjectDetail({ customProjects = [] }) {
   const [images, setImages] = useState([]);
 
   useEffect(() => {
-    if (defaultProject) {
-      const loaded = loadProject(defaultProject.id, defaultProject);
-      setProject(loaded);
-      // Init images from loaded project
-      const imgs = Array.isArray(loaded.images) && loaded.images.length > 0
-        ? loaded.images
-        : loaded.image ? [loaded.image] : [];
-      setImages(imgs);
-    }
-  }, [id]);
+  if (defaultProject) {
+    const loaded = loadProject(defaultProject.id, defaultProject);
+    setProject(loaded);
+    const imgs = Array.isArray(loaded.images) && loaded.images.length > 0
+      ? loaded.images
+      : loaded.image ? [loaded.image] : [];
+    setImages(imgs);
+  }
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [id]);
 
   if (!defaultProject || !project) {
     return (

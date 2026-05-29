@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 
@@ -32,15 +32,15 @@ function ImageCarousel({ images, title }) {
     : [`https://placehold.co/600x400/0f172a/06b6d4?text=${encodeURIComponent(title)}`];
   const hasMultiple = safeImages.length > 1;
 
-  const getNextIndex = useCallback(() => {
-    if (isRandom) {
-      let next;
-      do { next = Math.floor(Math.random() * safeImages.length); }
-      while (next === current && safeImages.length > 1);
-      return next;
-    }
-    return (current + 1) % safeImages.length;
-  }, [current, isRandom, safeImages.length]);
+  // const getNextIndex = useCallback(() => {
+  //   if (isRandom) {
+  //     let next;
+  //     do { next = Math.floor(Math.random() * safeImages.length); }
+  //     while (next === current && safeImages.length > 1);
+  //     return next;
+  //   }
+  //   return (current + 1) % safeImages.length;
+  // }, [current, isRandom, safeImages.length]);
 
   // Auto-play
   useEffect(() => {
