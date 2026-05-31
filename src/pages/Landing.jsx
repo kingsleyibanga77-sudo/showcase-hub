@@ -357,11 +357,14 @@ export default function Landing() {
           style={{ rotateX, rotateY, transformPerspective: 1000 }}
           className="flex flex-col justify-center px-6 md:px-16 pt-28 pb-8 md:py-32"
         >
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="text-cyan-500 dark:text-cyan-400 text-xs tracking-[0.4em] uppercase mb-4 font-medium"
-          >
-            ✦ Welcome,
-          </motion.p>
+          <motion.p
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.2 }}
+  className="text-cyan-500 dark:text-cyan-400 text-xs tracking-[0.4em] uppercase mb-4 font-medium"
+>
+  ✦ Welcome,
+</motion.p>
 
           <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
             className="text-5xl sm:text-6xl md:text-7xl font-black leading-none mb-4"
