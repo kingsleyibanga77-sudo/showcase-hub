@@ -203,6 +203,46 @@ function MockPreview() {
   );
 }
 
+function FAQItem({ item, index }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 15 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.04 }}
+      className="border border-white/10 rounded-xl overflow-hidden"
+    >
+      <button
+        onClick={() => setOpen((p) => !p)}
+        className="w-full flex items-center justify-between px-5 py-4 text-left bg-white/5 hover:bg-white/10 transition-colors"
+      >
+        <span className="text-white font-semibold text-sm pr-4">{item.q}</span>
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+          className="text-slate-400 flex-shrink-0 text-xs"
+        >▾</motion.span>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="px-5 py-4 bg-white/[0.02] border-t border-white/10">
+              <p className="text-slate-400 text-sm leading-relaxed">{item.a}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
 // ============================================================
 // FOOTER
 // ============================================================
@@ -426,6 +466,32 @@ export default function Welcome() {
               <h3 className="text-white font-black text-base md:text-lg mb-2">{step.title}</h3>
               <p className="text-slate-400 text-sm leading-relaxed">{step.desc}</p>
             </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-16 md:py-24 px-5 md:px-8 max-w-3xl mx-auto">
+        <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-10 md:mb-16">
+          <p className="text-violet-400 text-xs tracking-[0.4em] uppercase mb-3 font-semibold">✦ FAQ</p>
+          <h2 className="text-3xl md:text-5xl font-black mb-4">Common Questions</h2>
+          <p className="text-slate-400 text-sm">Everything you need to know about Showcase Hub.</p>
+        </motion.div>
+        <div className="space-y-3">
+          {[
+            { q: "Is Showcase Hub free?", a: "Yes, completely free. Create an account and start showcasing your projects with no credit card required." },
+            { q: "Who can see my projects?", a: "By default your showcase is private. You can share a public view-only link with anyone — they can browse your projects without making any changes." },
+            { q: "Can I use this as my portfolio?", a: "Absolutely. That's exactly what it's built for. Share your public link with recruiters, clients or anyone you want to impress." },
+            { q: "What happens to my data?", a: "Your data is stored securely in Firebase Firestore and syncs across all your devices. It's tied to your account and only accessible by you." },
+            { q: "Can I add projects without images?", a: "Yes. If you don't upload images, a placeholder with your project name is shown. You can always add images later by editing the project." },
+            { q: "How do I connect my GitHub?", a: "Go to Settings → Profile and enter your GitHub username. Your latest repositories will automatically appear on your Projects page." },
+            { q: "Can I delete a project?", a: "Yes. Hover over any project card and a delete button appears. Default projects can be hidden and restored later from Settings → Personalization." },
+            { q: "What is the difference between Full Name and Display Name?", a: "Your Full Name is set once during onboarding and is permanent — it's used for your monogram initials. Your Display Name is shown on your Landing page and can be changed freely." },
+            { q: "Can I customize the look of my showcase?", a: "Yes. Go to Settings → Personalization to change your monogram colors, tagline, floating skill badges and stats." },
+            { q: "Can I use this on my phone?", a: "Yes. Showcase Hub is fully mobile responsive and works on all screen sizes and browsers." },
+            { q: "How do I report a bug?", a: "Go to the Support page from the navbar once logged in. You can submit bug reports, feature requests or general feedback." },
+          ].map((item, i) => (
+            <FAQItem key={i} item={item} index={i} />
           ))}
         </div>
       </section>

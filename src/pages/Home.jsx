@@ -1,11 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import ProjectCard from "../components/ProjectCard";
 import SkillsSection from "../components/SkillsSection";
 import defaultProjects from "../data/projects";
 
 const filters = ["Web", "Blockchain", "Data", "Web3"];
-const GITHUB_USERNAME = "kingsleyibanga77-sudo";
+const GITHUB_USERNAME = (() => {
+  try {
+    const prefs = localStorage.getItem("user_prefs");
+    const parsed = prefs ? JSON.parse(prefs) : null;
+    return parsed?.githubUsername || null;
+  } catch { return null; }
+})();
 
 // ============================================================
 // GITHUB REPO CARD
@@ -52,7 +59,7 @@ function GitHubCard({ repo, index }) {
 // ============================================================
 // HOME PAGE
 // ============================================================
-export default function Home({ customProjects = [], onAddProject }) {
+export default function Home({ customProjects = [], onAddProject, deletedDefaults = [], onDelete }) {
   const [activeFilters, setActiveFilters] = useState([]);
   const [search, setSearch] = useState("");
   const [activeSkills, setActiveSkills] = useState([]);
@@ -61,25 +68,29 @@ export default function Home({ customProjects = [], onAddProject }) {
   const [repoError, setRepoError] = useState(false);
   const projectsRef = useRef(null);
 
-  const [localCustom, setLocalCustom] = useState(() => {
+  const [localCustom] = useState(() => {
     try {
       const saved = localStorage.getItem("custom_projects");
       return saved ? JSON.parse(saved) : [];
     } catch { return []; }
   });
 
-  const allProjects = [...defaultProjects, ...localCustom, ...customProjects];
-
-  const customIds = new Set([
-    ...localCustom.map((p) => p.id),
-    ...customProjects.map((p) => p.id),
-  ]);
+  // Filter out deleted defaults then combine all projects
+  const allProjects = [
+    ...defaultProjects.filter((p) => !deletedDefaults.includes(p.id)),
+    ...localCustom,
+    ...customProjects,
+  ];
 
   const handleDelete = (id) => {
-    setLocalCustom((prev) => prev.filter((p) => p.id !== id));
+    onDelete && onDelete(id);
   };
 
   useEffect(() => {
+    if (!GITHUB_USERNAME) {
+      setRepoLoading(false);
+      return;
+    }
     const fetchRepos = async () => {
       try {
         const res = await fetch(
@@ -273,10 +284,37 @@ export default function Home({ customProjects = [], onAddProject }) {
               key={project.id}
               project={project}
               index={index}
-              isCustom={customIds.has(project.id)}
+              isCustom={true}
               onDelete={handleDelete}
             />
           ))}
+
+          {/* Big Add Project card */}
+          <motion.button
+            onClick={onAddProject}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            whileHover={{ y: -6, boxShadow: "0 0 30px rgba(6,182,212,0.15)" }}
+            whileTap={{ scale: 0.98 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4 }}
+            className="flex flex-col items-center justify-center gap-4 bg-white dark:bg-slate-900/60 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-8 hover:border-cyan-500 dark:hover:border-cyan-500/60 transition-all duration-300 min-h-[320px] group"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center group-hover:bg-cyan-500/20 transition-all duration-300">
+              <span className="text-3xl">➕</span>
+            </div>
+            <div className="text-center">
+              <p className="text-slate-900 dark:text-white font-black text-lg mb-1 group-hover:text-cyan-600 dark:group-hover:text-cyan-400 transition-colors">
+                Add New Project
+              </p>
+              <p className="text-slate-400 dark:text-slate-500 text-sm leading-relaxed max-w-[180px]">
+                Showcase another project in your portfolio
+              </p>
+            </div>
+            <span className="text-xs tracking-widest uppercase px-5 py-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400 rounded-xl group-hover:bg-cyan-500 group-hover:text-white transition-all duration-300">
+              Get Started →
+            </span>
+          </motion.button>
         </div>
       ) : (
         <motion.div
@@ -375,6 +413,18 @@ export default function Home({ customProjects = [], onAddProject }) {
             </motion.div>
           </>
         )}
+      </div>
+
+      {/* Page footer */}
+      <div className="mt-16 pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 dark:text-slate-600">
+        <span>© {new Date().getFullYear()} KI. Showcase Hub</span>
+        <div className="flex items-center gap-3">
+          <Link to="/welcome" className="hover:text-violet-400 transition-colors">About</Link>
+          <span>·</span>
+          <Link to="/support" className="hover:text-cyan-400 transition-colors">Support</Link>
+          <span>·</span>
+          <Link to="/welcome" className="hover:text-cyan-400 transition-colors">← Welcome Page</Link>
+        </div>
       </div>
     </div>
   );

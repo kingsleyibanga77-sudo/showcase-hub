@@ -23,6 +23,19 @@ export default function Navbar({ onAddProject }) {
     } catch { return null; }
   })();
 
+  // Load projects for dropdown
+  const allProjects = (() => {
+    try {
+      const custom = localStorage.getItem("custom_projects");
+      const customProjects = custom ? JSON.parse(custom) : [];
+      const deleted = localStorage.getItem("deleted_default_projects");
+      const deletedIds = deleted ? JSON.parse(deleted) : [];
+      const { default: defaultProjects } = require("../data/projects");
+      const visibleDefaults = defaultProjects.filter((p) => !deletedIds.includes(p.id));
+      return [...visibleDefaults, ...customProjects];
+    } catch { return []; }
+  })();
+
   const displayName = prefs?.displayName || user?.displayName || user?.email || "User";
   const initials = prefs?.initials || displayName[0]?.toUpperCase() || "U";
   const color1 = prefs?.color1 || "#06b6d4";
@@ -135,6 +148,34 @@ export default function Navbar({ onAddProject }) {
                         </div>
                       </button>
 
+                      {/* Projects list */}
+                      {allProjects.length > 0 && (
+                        <>
+                          <div className={`my-1 h-px ${isDark ? "bg-slate-800" : "bg-slate-100"}`} />
+                          <p className={`px-3 py-1 text-[10px] tracking-widest uppercase ${isDark ? "text-slate-600" : "text-slate-400"}`}>
+                            Your Projects
+                          </p>
+                          <div className="max-h-44 overflow-y-auto">
+                            {allProjects.map((project) => (
+                              <Link key={project.id} to={`/project/${project.id}`}
+                                onClick={() => setShowDropdown(false)}
+                                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs transition-all ${
+                                  isDark ? "text-slate-400 hover:bg-slate-800 hover:text-cyan-400" : "text-slate-500 hover:bg-slate-50 hover:text-cyan-600"
+                                }`}
+                              >
+                                <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 flex-shrink-0" />
+                                <span className="truncate flex-1 font-medium">{project.title}</span>
+                                <span className={`text-[9px] flex-shrink-0 ${
+                                  project.status === "Live" ? "text-green-400" :
+                                  project.status === "In Progress" ? "text-yellow-400" :
+                                  "text-slate-600"
+                                }`}>{project.status}</span>
+                              </Link>
+                            ))}
+                          </div>
+                        </>
+                      )}
+
                       <div className={`my-1 h-px ${isDark ? "bg-slate-800" : "bg-slate-100"}`} />
 
                       <Link to="/settings" onClick={() => setShowDropdown(false)}
@@ -210,23 +251,21 @@ export default function Navbar({ onAddProject }) {
                         <span>⚙️</span>
                         <span className="tracking-widest uppercase font-semibold">Settings</span>
                       </Link>
-                                            <Link
-                        to="/support"
-                        onClick={() => setShowDropdown(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition-all ${
-                          isDark
-                            ? "text-slate-300 hover:bg-slate-800 hover:text-cyan-400"
-                            : "text-slate-600 hover:bg-slate-50 hover:text-cyan-600"
+
+                      <button
+                        onClick={() => {
+                          const shareUrl = `${window.location.origin}/view/${encodeURIComponent(prefs?.username || displayName)}`;
+                          navigator.clipboard.writeText(shareUrl);
+                          setShowUserMenu(false);
+                        }}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition-all ${
+                          isDark ? "text-slate-300 hover:bg-slate-800" : "text-slate-600 hover:bg-slate-50"
                         }`}
                       >
-                        <span className="text-base">🆘</span>
-                        <div>
-                          <p className="font-semibold tracking-wider uppercase">Support</p>
-                          <p className={`text-[10px] ${isDark ? "text-slate-500" : "text-slate-400"}`}>
-                            Report bugs & get help
-                          </p>
-                        </div>
-                      </Link>
+                        <span>🔗</span>
+                        <span className="tracking-widest uppercase font-semibold">Copy Share Link</span>
+                      </button>
+
                       <button onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs text-red-400 hover:bg-red-500/10 transition-all"
                       >
@@ -312,7 +351,8 @@ export default function Navbar({ onAddProject }) {
                   { label: "🏠 Home", to: "/home" },
                   { label: "🗂️ View Projects", to: "/projects" },
                   { label: "⚙️ Settings", to: "/settings" },
-                  { label: "🆘 Support", to: "/support" },
+                  { label: "🛟 Support", to: "/support" },
+                  { label: "ℹ️ Welcome Page", to: "/welcome" },
                 ].map(({ label, to }) => (
                   <Link key={to} to={to}
                     className={`block px-4 py-3 rounded-xl text-sm font-semibold transition-all ${

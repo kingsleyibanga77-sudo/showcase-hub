@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   updateProfile,
   deleteUser,
@@ -276,6 +276,8 @@ export default function Settings() {
   const [displayName, setDisplayName] = useState(
     prefs.displayName || auth.currentUser?.displayName || ""
   );
+  const [username, setUsername] = useState(prefs.username || "");
+  const [githubUsername, setGithubUsername] = useState(prefs.githubUsername || "");
   const [profileImage, setProfileImage] = useState(prefs.profileImage || "");
   const [selectedPreset, setSelectedPreset] = useState(
     Math.max(COLOR_PRESETS.findIndex((p) => p.color1 === prefs.color1), 0)
@@ -285,6 +287,30 @@ export default function Settings() {
   );
   const [customColor1, setCustomColor1] = useState(prefs.color1 || "#06b6d4");
   const [customColor2, setCustomColor2] = useState(prefs.color2 || "#3b82f6");
+
+  // Landing page customization
+  const [tagline, setTagline] = useState(
+    prefs.tagline || "Developer · Data Engineer · Web3 Builder"
+  );
+  const [badges, setBadges] = useState(
+    prefs.badges || ["React", "Node.js", "Web3", "Python", "Data"]
+  );
+  const [newBadge, setNewBadge] = useState("");
+  const [stats, setStats] = useState(
+    prefs.stats || [
+      { value: "3+", label: "Years Exp." },
+      { value: "10+", label: "Projects" },
+      { value: "5+", label: "Technologies" },
+    ]
+  );
+
+  // Restore deleted default projects
+  const [deletedDefaults, setDeletedDefaults] = useState(() => {
+    try {
+      const saved = localStorage.getItem("deleted_default_projects");
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
 
   const color1 = useCustom ? customColor1 : (COLOR_PRESETS[selectedPreset]?.color1 || "#06b6d4");
   const color2 = useCustom ? customColor2 : (COLOR_PRESETS[selectedPreset]?.color2 || "#3b82f6");
@@ -303,9 +329,14 @@ export default function Settings() {
       JSON.stringify({
         ...current,
         displayName: displayName.trim(),
+        username: username.trim(),
+        githubUsername: githubUsername.trim(),
         initials: getInitials(displayName),
         color1,
         color2,
+        tagline,
+        badges,
+        stats,
         ...extra,
       })
     );
@@ -489,22 +520,52 @@ export default function Settings() {
                       </div>
                     </div>
 
-                    {/* Name input */}
+                    {/* Name — locked */}
                     <div className="mb-4">
                       <label className="text-xs tracking-widest uppercase text-slate-400 mb-2 block">Full Name</label>
                       <input
                         type="text"
                         value={displayName}
-                        onChange={(e) => setDisplayName(e.target.value)}
-                        placeholder="First Last"
-                        className={inputClass}
+                        readOnly
+                        className={`${inputClass} opacity-50 cursor-not-allowed`}
                       />
                       <p className="text-slate-500 text-xs mt-1">
-                        Appears on your loading screen and landing page.
+                        🔒 Full name is permanent and cannot be changed.
                       </p>
                     </div>
 
-                    {/* Email (read only) */}
+                    {/* Username — editable display name */}
+                    <div className="mb-4">
+                      <label className="text-xs tracking-widest uppercase text-slate-400 mb-2 block">Display Name</label>
+                      <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="e.g. Kingsley, KI, King..."
+                        className={inputClass}
+                      />
+                      <p className="text-slate-500 text-xs mt-1">
+                        This is the name shown as the big heading on your Landing page. Change it anytime.
+                      </p>
+                    </div>
+
+                    {/* GitHub Username */}
+                    <div className="mb-4">
+                      <label className="text-xs tracking-widest uppercase text-slate-400 mb-2 block">GitHub Username</label>
+                      <div className={`flex items-center border rounded-xl overflow-hidden transition-colors focus-within:border-cyan-500 ${
+                        isDark ? "bg-slate-800 border-slate-700" : "bg-slate-50 border-slate-200"
+                      }`}>
+                        <span className={`pl-4 pr-2 text-sm flex-shrink-0 ${isDark ? "text-slate-500" : "text-slate-400"}`}>github.com/</span>
+                        <input type="text" value={githubUsername}
+                          onChange={(e) => setGithubUsername(e.target.value.trim())}
+                          placeholder="yourusername"
+                          className={`flex-1 bg-transparent pr-4 py-3 text-sm focus:outline-none ${isDark ? "text-slate-200 placeholder-slate-600" : "text-slate-800 placeholder-slate-400"}`}
+                        />
+                      </div>
+                      <p className="text-slate-500 text-xs mt-1">Your GitHub repos will appear on the Projects page.</p>
+                    </div>
+
+                    {/* Email */}
                     <div className="mb-6">
                       <label className="text-xs tracking-widest uppercase text-slate-400 mb-2 block">Email Address</label>
                       <input
@@ -527,6 +588,30 @@ export default function Settings() {
                     >
                       {loading ? "Saving..." : savedMsg ? "✓ Saved!" : "Save Profile"}
                     </button>
+                    <div className={`mb-6 p-4 rounded-xl border ${isDark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+                      <p className={`font-semibold text-sm mb-1 ${isDark ? "text-white" : "text-slate-900"}`}>
+                        🔗 Your Portfolio Link
+                      </p>
+                      <p className="text-slate-500 text-xs mb-3">
+                        Share this link so others can view your showcase in read-only mode.
+                      </p>
+                      <div className={`flex items-center gap-2 border rounded-xl px-3 py-2 mb-2 ${isDark ? "bg-slate-900 border-slate-700" : "bg-white border-slate-200"}`}>
+                        <span className="text-slate-400 text-xs font-mono truncate flex-1">
+                          {window.location.origin}/view/{username || "yourname"}
+                        </span>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/view/${encodeURIComponent(username || displayName)}`);
+                          }}
+                          className="text-xs text-cyan-500 dark:text-cyan-400 hover:text-cyan-400 transition-colors flex-shrink-0 font-semibold"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                      <p className="text-slate-500 text-xs">
+                        Update your Display Name above to change the link.
+                      </p>
+                    </div>
                   </div>
                 )}
 
@@ -647,6 +732,123 @@ export default function Settings() {
                       )}
                     </div>
 
+                    {/* ===== TAGLINE ===== */}
+                    <div className="mb-6">
+                      <label className="text-xs tracking-widest uppercase text-slate-400 mb-2 block">
+                        Job Title / Tagline
+                      </label>
+                      <input
+                        type="text"
+                        value={tagline}
+                        onChange={(e) => setTagline(e.target.value)}
+                        placeholder="Developer · Data Engineer · Web3 Builder"
+                        className={inputClass}
+                      />
+                      <p className="text-slate-500 text-xs mt-1">
+                        Shown below your name on the Landing page.
+                      </p>
+                    </div>
+
+                    {/* ===== FLOATING BADGES ===== */}
+                    <div className="mb-6">
+                      <label className="text-xs tracking-widest uppercase text-slate-400 mb-3 block">
+                        Floating Skill Badges
+                      </label>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {badges.map((badge, i) => (
+                          <div key={i} className="flex items-center gap-1 bg-cyan-500/10 border border-cyan-500/30 rounded-lg px-3 py-1.5">
+                            <span className="text-cyan-600 dark:text-cyan-400 text-xs font-semibold">{badge}</span>
+                            <button
+                              onClick={() => setBadges(badges.filter((_, idx) => idx !== i))}
+                              className="text-slate-400 hover:text-red-400 transition-colors text-xs ml-1"
+                            >✕</button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newBadge}
+                          onChange={(e) => setNewBadge(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && newBadge.trim() && badges.length < 6) {
+                              setBadges([...badges, newBadge.trim()]);
+                              setNewBadge("");
+                            }
+                          }}
+                          placeholder="Add a skill badge..."
+                          className={`${inputClass} flex-1`}
+                        />
+                        <button
+                          onClick={() => {
+                            if (newBadge.trim() && badges.length < 6) {
+                              setBadges([...badges, newBadge.trim()]);
+                              setNewBadge("");
+                            }
+                          }}
+                          className="px-4 py-2 bg-cyan-500 text-white rounded-xl text-sm font-semibold hover:bg-cyan-400 transition-all flex-shrink-0"
+                        >Add</button>
+                      </div>
+                      <p className="text-slate-500 text-xs mt-1">Max 6 badges. These float around your profile image.</p>
+                    </div>
+
+                    {/* ===== STATS ===== */}
+                    <div className="mb-6">
+                      <label className="text-xs tracking-widest uppercase text-slate-400 mb-3 block">
+                        Stats
+                      </label>
+                      <div className="space-y-2">
+                        {stats.map((stat, i) => (
+                          <div key={i} className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              value={stat.value}
+                              onChange={(e) => {
+                                const updated = [...stats];
+                                updated[i] = { ...updated[i], value: e.target.value };
+                                setStats(updated);
+                              }}
+                              placeholder="e.g. 3+"
+                              className={`${inputClass} w-24 flex-shrink-0`}
+                            />
+                            <input
+                              type="text"
+                              value={stat.label}
+                              onChange={(e) => {
+                                const updated = [...stats];
+                                updated[i] = { ...updated[i], label: e.target.value };
+                                setStats(updated);
+                              }}
+                              placeholder="e.g. Years Exp."
+                              className={inputClass}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-slate-500 text-xs mt-1">Shown at the bottom of the Landing page hero.</p>
+                    </div>
+
+                    {/* ===== RESTORE DELETED PROJECTS ===== */}
+                    {deletedDefaults.length > 0 && (
+                      <div className={`mb-6 p-4 rounded-xl border ${isDark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
+                        <p className={`font-semibold text-sm mb-1 ${isDark ? "text-white" : "text-slate-900"}`}>
+                          Hidden Projects
+                        </p>
+                        <p className="text-slate-500 text-xs mb-3">
+                          You've hidden {deletedDefaults.length} default project{deletedDefaults.length !== 1 ? "s" : ""}. You can restore them here.
+                        </p>
+                        <button
+                          onClick={() => {
+                            localStorage.removeItem("deleted_default_projects");
+                            setDeletedDefaults([]);
+                          }}
+                          className="text-xs tracking-widest uppercase px-4 py-2 border border-cyan-500/30 text-cyan-500 dark:text-cyan-400 rounded-xl hover:bg-cyan-500/10 transition-all"
+                        >
+                          ↩ Restore All Default Projects
+                        </button>
+                      </div>
+                    )}
+
                     {error && (
                       <p className="text-red-400 text-sm mb-4 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2">{error}</p>
                     )}
@@ -722,6 +924,18 @@ export default function Settings() {
 
               </motion.div>
             </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Page footer */}
+        <div className="mt-12 pt-6 border-t border-slate-200 dark:border-slate-800 max-w-4xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 dark:text-slate-600">
+          <span>© {new Date().getFullYear()} KI. Showcase Hub</span>
+          <div className="flex items-center gap-3">
+            <Link to="/welcome" className="hover:text-violet-400 transition-colors">About</Link>
+            <span>·</span>
+            <Link to="/support" className="hover:text-cyan-400 transition-colors">Support</Link>
+            <span>·</span>
+            <Link to="/welcome" className="hover:text-cyan-400 transition-colors">← Welcome Page</Link>
           </div>
         </div>
       </div>

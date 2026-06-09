@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 
@@ -29,18 +29,18 @@ function ImageCarousel({ images, title }) {
 
   const safeImages = Array.isArray(images) && images.length > 0
     ? images
-    : [`https://placehold.co/600x400/0f172a/06b6d4?text=${encodeURIComponent(title)}`];
+    : ["https://placehold.co/600x400/0f172a/06b6d4?text=No+Image"];
   const hasMultiple = safeImages.length > 1;
 
-  // const getNextIndex = useCallback(() => {
-  //   if (isRandom) {
-  //     let next;
-  //     do { next = Math.floor(Math.random() * safeImages.length); }
-  //     while (next === current && safeImages.length > 1);
-  //     return next;
-  //   }
-  //   return (current + 1) % safeImages.length;
-  // }, [current, isRandom, safeImages.length]);
+  const getNextIndex = useCallback(() => {
+    if (isRandom) {
+      let next;
+      do { next = Math.floor(Math.random() * safeImages.length); }
+      while (next === current && safeImages.length > 1);
+      return next;
+    }
+    return (current + 1) % safeImages.length;
+  }, [current, isRandom, safeImages.length]);
 
   // Auto-play
   useEffect(() => {
@@ -165,7 +165,7 @@ function ImageCarousel({ images, title }) {
 // ============================================================
 // DELETE CONFIRM MODAL
 // ============================================================
-function DeleteModal({ project, onConfirm, onCancel }) {
+function DeleteModal({ project, onConfirm, onCancel, isDefault }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -185,14 +185,22 @@ function DeleteModal({ project, onConfirm, onCancel }) {
           <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-xl flex-shrink-0">🗑️</div>
           <div>
             <h3 className="text-white font-black text-lg">Delete Project</h3>
-            <p className="text-slate-500 text-xs">This cannot be undone.</p>
+            <p className="text-slate-500 text-xs">This will hide the project from your showcase.</p>
           </div>
         </div>
 
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-3 mb-5">
+        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-3 mb-4">
           <p className="text-slate-300 text-sm font-semibold truncate">{project.title}</p>
           <p className="text-slate-500 text-xs mt-0.5 line-clamp-1">{project.description}</p>
         </div>
+
+        {isDefault && (
+          <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl px-3 py-2 mb-4">
+            <p className="text-yellow-400 text-xs">
+              ⚠️ This is a default project. Deleting it will hide it from your showcase but it can be restored later from Settings.
+            </p>
+          </div>
+        )}
 
         <div className="flex gap-3">
           <button onClick={onCancel}
@@ -216,6 +224,7 @@ function DeleteModal({ project, onConfirm, onCancel }) {
 // ============================================================
 export default function ProjectCard({ project, index, onDelete, isCustom }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const isDefault = !isCustom;
 
   const images = Array.isArray(project.images) && project.images.length > 0
     ? project.images
@@ -224,19 +233,16 @@ export default function ProjectCard({ project, index, onDelete, isCustom }) {
     : [];
 
   const handleConfirmDelete = () => {
-    // Remove from localStorage
-    try {
-      const saved = localStorage.getItem("custom_projects");
-      const existing = saved ? JSON.parse(saved) : [];
-      const updated = existing.filter((p) => p.id !== project.id);
-      localStorage.setItem("custom_projects", JSON.stringify(updated));
-    } catch {}
-
-    // Remove per-project saved edits
-    try {
-      localStorage.removeItem(`project_${project.id}`);
-    } catch {}
-
+    // For custom projects also remove from localStorage
+    if (isCustom) {
+      try {
+        const saved = localStorage.getItem("custom_projects");
+        const existing = saved ? JSON.parse(saved) : [];
+        const updated = existing.filter((p) => p.id !== project.id);
+        localStorage.setItem("custom_projects", JSON.stringify(updated));
+        localStorage.removeItem(`project_${project.id}`);
+      } catch {}
+    }
     setShowDeleteModal(false);
     onDelete && onDelete(project.id);
   };
@@ -249,6 +255,7 @@ export default function ProjectCard({ project, index, onDelete, isCustom }) {
             project={project}
             onConfirm={handleConfirmDelete}
             onCancel={() => setShowDeleteModal(false)}
+            isDefault={isDefault}
           />
         )}
       </AnimatePresence>

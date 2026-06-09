@@ -701,6 +701,7 @@ export default function Support() {
               { label: "← Back to Projects", to: "/projects" },
               { label: "⚙️ Settings", to: "/settings" },
               { label: "🏠 Home", to: "/home" },
+              { label: "ℹ️ Welcome Page", to: "/welcome" },
             ].map(({ label, to }) => (
               <Link
                 key={to}

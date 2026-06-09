@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
+import { auth } from "./firebase";
 import Navbar from "./components/Navbar";
 import Welcome from "./pages/Welcome";
 import Landing from "./pages/Landing";
@@ -9,6 +10,8 @@ import ProjectDetail from "./pages/ProjectDetail";
 import Login from "./pages/Login";
 import UserSetup from "./pages/UserSetup";
 import Settings from "./pages/Settings";
+import Support from "./pages/Support";
+import PublicView from "./pages/PublicView";
 import AddProjectModal from "./components/AddProjectModal";
 import PageTransition from "./components/PageTransition";
 import LoadingScreen from "./components/LoadingScreen";
@@ -16,7 +19,8 @@ import ScrollProgress from "./components/ScrollProgress";
 import CursorFollower from "./components/CursorFollower";
 import { useTheme } from "./context/ThemeContext";
 import { useAuth } from "./context/AuthContext";
-import Support from "./pages/Support";
+import { saveProjects, saveDeletedDefaults } from "./services/db";
+import defaultProjects from "./data/projects";
 
 // ============================================================
 // PROTECTED ROUTE
@@ -35,30 +39,73 @@ function ProtectedRoute({ children }) {
 }
 
 // ============================================================
-// NAVBAR WITH ADD PROJECT
-// ============================================================
-function NavbarWithModal({ onAddProject }) {
-  return <Navbar onAddProject={onAddProject} />;
-}
-
-// ============================================================
 // ANIMATED ROUTES
 // ============================================================
 function AnimatedRoutes() {
   const location = useLocation();
   const { user } = useAuth();
   const [showAddModal, setShowAddModal] = useState(false);
-  const [customProjects, setCustomProjects] = useState([]);
 
-  const handleAddProject = (project) => {
-  setCustomProjects((prev) => {
-    const updated = [...prev, project];
+  const [customProjects, setCustomProjects] = useState(() => {
     try {
-      localStorage.setItem("custom_projects", JSON.stringify(updated));
-    } catch {}
-    return updated;
+      const saved = localStorage.getItem("custom_projects");
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
   });
-};
+
+  const [deletedDefaults, setDeletedDefaults] = useState(() => {
+    try {
+      const saved = localStorage.getItem("deleted_default_projects");
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
+  // Add project — saves to state, localStorage and Firestore
+  const handleAddProject = async (project) => {
+    setCustomProjects((prev) => {
+      const updated = [...prev, project];
+      try {
+        localStorage.setItem("custom_projects", JSON.stringify(updated));
+        if (auth.currentUser) {
+          saveProjects(auth.currentUser.uid, updated);
+        }
+      } catch {}
+      return updated;
+    });
+  };
+
+  // Delete project — handles both default and custom
+  const handleDeleteProject = (id) => {
+    const isDefault = defaultProjects.some((p) => p.id === id);
+    if (isDefault) {
+      setDeletedDefaults((prev) => {
+        const updated = [...prev, id];
+        try {
+          localStorage.setItem("deleted_default_projects", JSON.stringify(updated));
+          if (auth.currentUser) {
+            saveDeletedDefaults(auth.currentUser.uid, updated);
+          }
+        } catch {}
+        return updated;
+      });
+    } else {
+      setCustomProjects((prev) => {
+        const updated = prev.filter((p) => p.id !== id);
+        try {
+          localStorage.setItem("custom_projects", JSON.stringify(updated));
+          localStorage.removeItem(`project_${id}`);
+          if (auth.currentUser) {
+            saveProjects(auth.currentUser.uid, updated);
+          }
+        } catch {}
+        return updated;
+      });
+    }
+  };
+
+  const NavbarWithModal = () => (
+    <Navbar onAddProject={() => setShowAddModal(true)} />
+  );
 
   return (
     <>
@@ -74,6 +121,7 @@ function AnimatedRoutes() {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
 
+          {/* Public routes */}
           <Route path="/welcome" element={
             <PageTransition><Welcome /></PageTransition>
           } />
@@ -86,6 +134,12 @@ function AnimatedRoutes() {
             !user ? <Navigate to="/login" /> : <PageTransition><UserSetup /></PageTransition>
           } />
 
+          {/* Public view — no auth required */}
+          <Route path="/view/:username" element={
+            <PageTransition><PublicView /></PageTransition>
+          } />
+
+          {/* Protected routes */}
           <Route path="/home" element={
             <ProtectedRoute>
               <PageTransition><Landing /></PageTransition>
@@ -96,10 +150,12 @@ function AnimatedRoutes() {
             <ProtectedRoute>
               <PageTransition>
                 <ScrollProgress />
-                <NavbarWithModal onAddProject={() => setShowAddModal(true)} />
+                <NavbarWithModal />
                 <Home
                   customProjects={customProjects}
+                  deletedDefaults={deletedDefaults}
                   onAddProject={() => setShowAddModal(true)}
+                  onDelete={handleDeleteProject}
                 />
               </PageTransition>
             </ProtectedRoute>
@@ -109,7 +165,7 @@ function AnimatedRoutes() {
             <ProtectedRoute>
               <PageTransition>
                 <ScrollProgress />
-                <NavbarWithModal onAddProject={() => setShowAddModal(true)} />
+                <NavbarWithModal />
                 <ProjectDetail customProjects={customProjects} />
               </PageTransition>
             </ProtectedRoute>
@@ -119,8 +175,18 @@ function AnimatedRoutes() {
             <ProtectedRoute>
               <PageTransition>
                 <ScrollProgress />
-                <NavbarWithModal onAddProject={() => setShowAddModal(true)} />
+                <NavbarWithModal />
                 <Settings />
+              </PageTransition>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/support" element={
+            <ProtectedRoute>
+              <PageTransition>
+                <ScrollProgress />
+                <NavbarWithModal />
+                <Support />
               </PageTransition>
             </ProtectedRoute>
           } />
@@ -128,18 +194,6 @@ function AnimatedRoutes() {
           <Route path="/" element={<Navigate to="/welcome" />} />
           <Route path="*" element={<Navigate to="/welcome" />} />
 
-<Route
-  path="/support"
-  element={
-    <ProtectedRoute>
-      <PageTransition>
-        <ScrollProgress />
-        <Navbar onAddProject={() => setShowAddModal(true)} />
-        <Support />
-      </PageTransition>
-    </ProtectedRoute>
-  }
-/>
         </Routes>
       </AnimatePresence>
     </>

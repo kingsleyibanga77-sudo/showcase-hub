@@ -365,6 +365,8 @@ function AddSkillModal({ onClose, onAdd, existingSkills }) {
 // SKILL CARD
 // ============================================================
 function SkillCard({ skill, index, activeSkills, toggleSkill, onEdit, onRemove, editMode }) {
+  if (!skill || typeof skill !== "object") return null;
+  const safeProjects = Array.isArray(skill.projects) ? skill.projects : [];
   const isActive = activeSkills.includes(skill.name);
   const color = getLevelColor(skill.level);
 
@@ -431,7 +433,7 @@ function SkillCard({ skill, index, activeSkills, toggleSkill, onEdit, onRemove, 
       {!editMode && (
         <div className="mt-3 flex items-center justify-between">
           <span className="text-slate-400 dark:text-slate-600 text-xs">
-            {skill.projects.length} project{skill.projects.length !== 1 ? "s" : ""}
+            {safeProjects.length} project{safeProjects.length !== 1 ? "s" : ""}
           </span>
           <span className={`text-xs transition-colors duration-200 ${
             isActive ? "text-cyan-500 dark:text-cyan-400" : "text-slate-300 dark:text-slate-700"
@@ -441,14 +443,14 @@ function SkillCard({ skill, index, activeSkills, toggleSkill, onEdit, onRemove, 
         </div>
       )}
 
-      {isActive && !editMode && skill.projects.length > 0 && (
+      {isActive && !editMode && safeProjects.length > 0 && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           transition={{ duration: 0.3 }}
           className="mt-3 pt-3 border-t border-cyan-400/20 flex flex-wrap gap-1"
         >
-          {skill.projects.map((p) => (
+          {safeProjects.map((p) => (
             <span key={p} className="text-xs bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded-md">
               {p}
             </span>
@@ -544,23 +546,82 @@ function EditSkillModal({ skill, onClose, onSave }) {
 // MAIN SKILLS SECTION
 // ============================================================
 export default function SkillsSection({ activeSkills, toggleSkill, clearSkills, onFilterBySkill }) {
-  const [skills, setSkills] = useState(DEFAULT_SKILLS);
+  const [skills, setSkills] = useState(() => {
+    try {
+      // Load from user_skills (set during onboarding or previously saved)
+      const saved = localStorage.getItem("user_skills");
+      if (saved) {
+        const skillArray = JSON.parse(saved);
+        if (Array.isArray(skillArray) && skillArray.length > 0) {
+          // Convert flat array to category object
+          const grouped = {};
+          skillArray.forEach((skill) => {
+            const cat = skill.category || "Other";
+            if (!grouped[cat]) grouped[cat] = [];
+            grouped[cat].push({
+              name: skill.name,
+              level: skill.level || 50,
+              icon: skill.icon || "⭐",
+            });
+          });
+          return grouped;
+        }
+      }
+      // Load from skills_data (previously saved from edit mode)
+      const skillsData = localStorage.getItem("skills_data");
+      if (skillsData) return JSON.parse(skillsData);
+      // Return empty object — no default skills
+      return {};
+    } catch { return {}; }
+  });
   const [editMode, setEditMode] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingSkill, setEditingSkill] = useState(null);
 
+  // Save skills to localStorage whenever they change
+  const saveSkills = (updatedSkills) => {
+    try {
+      localStorage.setItem("skills_data", JSON.stringify(updatedSkills));
+      // Also update user_skills flat array
+      const flat = Object.entries(updatedSkills).flatMap(([category, categorySkills]) =>
+        categorySkills.map((s, i) => ({
+          id: Date.now() + i,
+          name: s.name,
+          level: s.level,
+          icon: s.icon,
+          category,
+        }))
+      );
+      localStorage.setItem("user_skills", JSON.stringify(flat));
+      // Sync to Firestore if user is logged in
+      import("../services/db").then(({ saveSkills: saveToDb }) => {
+        import("../firebase").then(({ auth }) => {
+          if (auth.currentUser) saveToDb(auth.currentUser.uid, flat);
+        });
+      });
+    } catch {}
+  };
+
   const handleAddSkill = ({ category, skill }) => {
-    setSkills((prev) => ({
-      ...prev,
-      [category]: [...(prev[category] || []), skill],
-    }));
+    setSkills((prev) => {
+      const updated = {
+        ...prev,
+        [category]: [...(prev[category] || []), skill],
+      };
+      saveSkills(updated);
+      return updated;
+    });
   };
 
   const handleRemoveSkill = (category, skillName) => {
-    setSkills((prev) => ({
-      ...prev,
-      [category]: prev[category].filter((s) => s.name !== skillName),
-    }));
+    setSkills((prev) => {
+      const updated = {
+        ...prev,
+        [category]: prev[category].filter((s) => s.name !== skillName),
+      };
+      saveSkills(updated);
+      return updated;
+    });
   };
 
   const handleEditSkill = (skillName, newLevel) => {
@@ -682,31 +743,42 @@ export default function SkillsSection({ activeSkills, toggleSkill, clearSkills, 
 
         {/* Skill Groups */}
         <div className="space-y-10">
-          {Object.entries(skills).map(([category, categorySkills]) => {
-            if (categorySkills.length === 0) return null;
-            return (
-              <div key={category}>
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-lg">{categoryEmojis[category] || "📁"}</span>
-                  <h3 className="text-slate-700 dark:text-slate-300 font-bold text-sm tracking-widest uppercase">
-                    {category}
-                  </h3>
-                  <span className="text-slate-400 dark:text-slate-600 text-xs">
-                    ({categorySkills.length})
-                  </span>
-                  <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-                </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {categorySkills.map((skill, index) => (
-                    <SkillCard
-                      key={skill.name}
-                      skill={skill}
-                      index={index}
-                      activeSkills={activeSkills}
-                      toggleSkill={(name) => {
-                        toggleSkill(name);
-                        onFilterBySkill();
-                      }}
+          {Object.keys(skills).length === 0 ? (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              className="text-center py-16 border border-slate-200 dark:border-slate-800 rounded-2xl"
+            >
+              <p className="text-4xl mb-3">🧠</p>
+              <p className="text-slate-500 dark:text-slate-400 text-lg font-semibold mb-2">No skills added yet</p>
+              <p className="text-slate-400 dark:text-slate-600 text-sm mb-4">
+                Click <span className="text-cyan-500">✏️ Edit Skills</span> to add your first skill.
+              </p>
+            </motion.div>
+          ) : (
+            Object.entries(skills).map(([category, categorySkills]) => {
+              if (!Array.isArray(categorySkills) || categorySkills.length === 0) return null;
+              return (
+                <div key={category}>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-lg">{categoryEmojis[category] || "📁"}</span>
+                    <h3 className="text-slate-700 dark:text-slate-300 font-bold text-sm tracking-widest uppercase">
+                      {category}
+                    </h3>
+                    <span className="text-slate-400 dark:text-slate-600 text-xs">
+                      ({categorySkills.length})
+                    </span>
+                    <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                  </div>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {categorySkills.map((skill, index) => (
+                      <SkillCard
+                        key={skill.name}
+                        skill={skill}
+                        index={index}
+                        activeSkills={activeSkills}
+                        toggleSkill={(name) => {
+                          toggleSkill(name);
+                          onFilterBySkill();
+                        }}
                       editMode={editMode}
                       onEdit={setEditingSkill}
                       onRemove={(name) => handleRemoveSkill(category, name)}
@@ -715,21 +787,9 @@ export default function SkillsSection({ activeSkills, toggleSkill, clearSkills, 
                 </div>
               </div>
             );
-          })}
+          })
+          )}
         </div>
-
-        {/* Empty state */}
-        {allSkillsFlat.length === 0 && (
-          <div className="text-center py-16 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
-            <p className="text-slate-400 text-lg mb-3">No skills added yet.</p>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="text-cyan-500 dark:text-cyan-400 text-sm tracking-widest uppercase hover:text-cyan-600"
-            >
-              + Add your first skill
-            </button>
-          </div>
-        )}
       </div>
     </>
   );

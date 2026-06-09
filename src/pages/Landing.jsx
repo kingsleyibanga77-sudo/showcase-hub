@@ -87,7 +87,10 @@ function ImageModal({ onClose, onSave, onDelete, currentImage }) {
 // ============================================================
 // FLOATING IMAGE
 // ============================================================
-function FloatingImage({ onImageClick, profileImage, isDark }) {
+function FloatingImage({ onImageClick, profileImage, isDark, badges }) {
+  const safeBadges = Array.isArray(badges) && badges.length > 0
+    ? badges.slice(0, 5)
+    : ["React", "Node.js", "Web3", "Python", "Data"];
   return (
     <div className="relative flex items-center justify-center w-full h-full min-h-[300px]">
       <motion.div animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
@@ -119,13 +122,8 @@ function FloatingImage({ onImageClick, profileImage, isDark }) {
 
       {/* Desktop badges */}
       <div className="hidden md:block">
-        {[
-          { label: "React", angle: 0 },
-          { label: "Node.js", angle: 72 },
-          { label: "Web3", angle: 144 },
-          { label: "Python", angle: 216 },
-          { label: "Data", angle: 288 },
-        ].map(({ label, angle }) => {
+        {safeBadges.map((label, index) => {
+          const angle = (index / safeBadges.length) * 360;
           const radius = 140;
           const rad = (angle * Math.PI) / 180;
           const x = Math.cos(rad) * radius;
@@ -133,7 +131,7 @@ function FloatingImage({ onImageClick, profileImage, isDark }) {
           return (
             <motion.div key={label}
               animate={{ y: [y - 5, y + 5, y - 5] }}
-              transition={{ duration: 3 + angle * 0.01, repeat: Infinity, delay: angle * 0.01 }}
+              transition={{ duration: 3 + index * 0.5, repeat: Infinity, delay: index * 0.2 }}
               style={{ position: "absolute", left: `calc(50% + ${x}px)`, top: `calc(50% + ${y}px)` }}
               className={`-translate-x-1/2 -translate-y-1/2 border text-xs px-3 py-1 rounded-lg backdrop-blur-sm ${
                 isDark
@@ -149,7 +147,7 @@ function FloatingImage({ onImageClick, profileImage, isDark }) {
 
       {/* Mobile badges */}
       <div className="md:hidden absolute bottom-0 left-0 right-0 flex justify-center flex-wrap gap-2 px-4">
-        {["React", "Node.js", "Web3", "Python"].map((label) => (
+        {safeBadges.slice(0, 4).map((label) => (
           <span key={label} className={`border text-xs px-2 py-1 rounded-lg ${
             isDark
               ? "bg-slate-900/90 border-cyan-500/30 text-cyan-300"
@@ -240,6 +238,8 @@ function LandingFooter({ isDark }) {
         </div>
 
         <div className={`flex items-center gap-3 text-xs ${isDark ? "text-slate-700" : "text-slate-400"}`}>
+          <Link to="/welcome" className="hover:text-violet-400 transition-colors">About</Link>
+          <span>·</span>
           <Link to="/welcome" className="hover:text-slate-500 transition-colors">Privacy</Link>
           <span>·</span>
           <Link to="/welcome" className="hover:text-slate-500 transition-colors">Terms</Link>
@@ -266,6 +266,20 @@ export default function Landing() {
   })();
 
   const [profileImage, setProfileImage] = useState(prefs?.profileImage || "");
+
+  const username = prefs?.username || prefs?.displayName || "Kingsley Ibanga";
+  const usernameParts = username.trim().split(" ");
+  const isSingleWord = usernameParts.length === 1;
+  const usernameFirst = usernameParts[0] || "Kingsley";
+  const usernameLast = usernameParts.slice(1).join(" ") || "";
+
+  const tagline = prefs?.tagline || "Developer · Data Engineer · Web3 Builder";
+  const badges = prefs?.badges || ["React", "Node.js", "Web3", "Python", "Data"];
+  const stats = prefs?.stats || [
+    { value: "3+", label: "Years Exp." },
+    { value: "10+", label: "Projects" },
+    { value: "5+", label: "Technologies" },
+  ];
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -365,13 +379,21 @@ export default function Landing() {
           <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
             className="text-5xl sm:text-6xl md:text-7xl font-black leading-none mb-4"
           >
-            <span className={isDark ? "text-white" : "text-slate-900"}>
-              {prefs?.displayName?.split(" ")[0] || "Kingsley"}
-            </span>
-            <br />
-            <span className="text-transparent bg-clip-text" style={{ backgroundImage: "linear-gradient(90deg, #06b6d4, #3b82f6)" }}>
-              {prefs?.displayName?.split(" ")[1] || "Ibanga"}
-            </span>
+            {isSingleWord ? (
+              <span className="text-transparent bg-clip-text" style={{ backgroundImage: "linear-gradient(90deg, #06b6d4, #3b82f6)" }}>
+                {usernameFirst}
+              </span>
+            ) : (
+              <>
+                <span className={isDark ? "text-white" : "text-slate-900"}>
+                  {usernameFirst}
+                </span>
+                <br />
+                <span className="text-transparent bg-clip-text" style={{ backgroundImage: "linear-gradient(90deg, #06b6d4, #3b82f6)" }}>
+                  {usernameLast}
+                </span>
+              </>
+            )}
           </motion.h1>
 
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.6 }}
@@ -379,7 +401,7 @@ export default function Landing() {
           >
             <div className="h-px w-8 bg-cyan-500 flex-shrink-0" />
             <p className={`text-xs tracking-widest uppercase ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-              Developer · Data Engineer · Web3 Builder
+              {tagline}
             </p>
           </motion.div>
 
@@ -420,17 +442,37 @@ export default function Landing() {
             >
               GitHub
             </motion.button>
+
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
+              onMouseEnter={() => setHoveredBtn("share")}
+              onMouseLeave={() => setHoveredBtn(null)}
+              onClick={() => {
+                const shareUrl = `${window.location.origin}/view/${encodeURIComponent(username)}`;
+                navigator.clipboard.writeText(shareUrl);
+                setHoveredBtn("copied");
+                setTimeout(() => setHoveredBtn(null), 2000);
+              }}
+              className={`relative z-20 px-6 py-3 rounded-xl font-semibold text-sm tracking-widest uppercase border transition-all duration-300 ${
+                hoveredBtn === "copied"
+                  ? "border-green-500 text-green-400 bg-green-500/10"
+                  : isDark
+                  ? "border-slate-600 text-slate-400 hover:border-slate-500 hover:bg-slate-800"
+                  : "border-slate-300 text-slate-500 hover:border-slate-400 hover:bg-slate-100"
+              }`}
+            >
+              {hoveredBtn === "copied" ? "✓ Link Copied!" : "🔗 Share"}
+            </motion.button>
           </motion.div>
 
           {/* Stats */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}
             className="flex gap-6 mt-10"
           >
-            {[["3+", "Years Exp."], ["10+", "Projects"], ["5+", "Technologies"]].map(([num, label]) => (
-              <div key={label}>
-                <p className="text-xl md:text-2xl font-bold text-cyan-500 dark:text-cyan-400">{num}</p>
+            {stats.map((stat, i) => (
+              <div key={i}>
+                <p className="text-xl md:text-2xl font-bold text-cyan-500 dark:text-cyan-400">{stat.value}</p>
                 <p className={`text-xs tracking-wider uppercase ${isDark ? "text-slate-500" : "text-slate-400"}`}>
-                  {label}
+                  {stat.label}
                 </p>
               </div>
             ))}
@@ -445,6 +487,7 @@ export default function Landing() {
             onImageClick={() => setShowImageModal(true)}
             profileImage={profileImage}
             isDark={isDark}
+            badges={badges}
           />
         </motion.div>
       </div>
