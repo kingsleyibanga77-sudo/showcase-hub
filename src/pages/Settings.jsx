@@ -273,7 +273,7 @@ export default function Settings() {
   };
 
   const prefs = loadPrefs();
-  const [displayName, setDisplayName] = useState(
+  const [displayName] = useState(
     prefs.displayName || auth.currentUser?.displayName || ""
   );
   const [username, setUsername] = useState(prefs.username || "");

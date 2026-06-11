@@ -636,7 +636,6 @@ export default function SkillsSection({ activeSkills, toggleSkill, clearSkills, 
     });
   };
 
-  const allSkillsFlat = Object.values(skills).flat();
 
   return (
     <>
