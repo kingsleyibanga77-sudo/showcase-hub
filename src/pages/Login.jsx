@@ -112,11 +112,18 @@ export default function Login() {
       }} />
 
       <div className="relative z-10 w-full max-w-md">
+        {/* Back to Welcome */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-4">
+          <Link to="/welcome" className="inline-flex items-center gap-2 text-slate-500 hover:text-cyan-400 text-xs tracking-widest uppercase transition-colors">
+            ← Welcome Page
+          </Link>
+        </motion.div>
+
         {/* Logo */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
           <Link to="/welcome" className="inline-block">
             <span className="font-black text-3xl text-white">
-              KI<span className="text-cyan-400">.</span>
+              SH<span className="text-cyan-400">.</span>
             </span>
           </Link>
           <p className="text-slate-500 text-sm mt-2">
@@ -267,9 +274,9 @@ export default function Login() {
 
         <p className="text-center text-slate-600 text-xs mt-6">
           By continuing you agree to our{" "}
-          <Link to="/welcome" className="text-slate-500 hover:text-cyan-400 transition-colors">Terms</Link>
+          <Link to="/terms" className="text-slate-500 hover:text-cyan-400 transition-colors">Terms</Link>
           {" "}and{" "}
-          <Link to="/welcome" className="text-slate-500 hover:text-cyan-400 transition-colors">Privacy Policy</Link>
+          <Link to="/privacy" className="text-slate-500 hover:text-cyan-400 transition-colors">Privacy Policy</Link>
         </p>
       </div>
     </div>

@@ -31,27 +31,27 @@ const MARQUEE_ITEMS = [
 const FOOTER_LINKS = {
   Platform: [
     { label: "Get Started", to: "/login" },
-    { label: "Projects Showcase", to: "/login" },
-    { label: "Skills Tracker", to: "/login" },
-    { label: "GitHub Sync", to: "/login" },
-    { label: "Personalization", to: "/login" },
+    { label: "Projects Showcase", to: "/projects" },
+    { label: "Skills Tracker", to: "/projects" },
+    { label: "GitHub Sync", to: "/settings" },
+    { label: "Personalization", to: "/settings" },
   ],
   "Stay Connected": [
-    { label: "GitHub", href: "https://github.com/kingsleyibanga77-sudo", external: true },
-    { label: "LinkedIn", href: "#", external: true },
-    { label: "Twitter / X", href: "#", external: true },
-    { label: "YouTube", href: "#", external: true },
+    { label: "GitHub", href: "https://github.com", external: true },
+    { label: "LinkedIn", href: "https://linkedin.com", external: true },
+    { label: "Twitter / X", href: "https://x.com", external: true },
+    { label: "YouTube", href: "https://youtube.com", external: true },
   ],
   Support: [
-    { label: "Report a Bug", to: "/login" },
-    { label: "FAQs", to: "/login" },
-    { label: "Contact Support", to: "/login" },
-    { label: "Release Notes", to: "/login" },
+    { label: "Report a Bug", to: "/support" },
+    { label: "FAQs", to: "/support" },
+    { label: "Contact Support", to: "/support" },
+    { label: "Release Notes", href: "https://github.com/showcase-hub-app/showcase-hub/releases", external: true },
   ],
   Legal: [
-    { label: "Privacy Policy", to: "/login" },
-    { label: "Terms of Service", to: "/login" },
-    { label: "Cookie Policy", to: "/login" },
+    { label: "Privacy Policy", to: "/privacy" },
+    { label: "Terms of Service", to: "/terms" },
+    { label: "Cookie Policy", to: "/privacy" },
   ],
 };
 
@@ -122,7 +122,7 @@ function MockPreview() {
     <div className="bg-slate-950 rounded-xl p-6 flex flex-col items-center justify-center h-40 md:h-48">
       <div className="w-14 h-14 mb-3 relative flex items-center justify-center">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 8, repeat: Infinity, ease: "linear" }} className="absolute inset-0 rounded-full border border-dashed border-cyan-500/30" />
-        <div className="w-9 h-9 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-black text-xs">KI</div>
+        <div className="w-9 h-9 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-black text-xs">SH</div>
       </div>
       <p className="text-slate-500 text-xs tracking-widest uppercase">Loading assets...</p>
       <div className="w-28 h-px bg-slate-800 mt-3 overflow-hidden rounded-full">
@@ -203,6 +203,9 @@ function MockPreview() {
   );
 }
 
+// ============================================================
+// FOOTER
+// ============================================================
 function FAQItem({ item, index }) {
   const [open, setOpen] = useState(false);
   return (
@@ -243,9 +246,6 @@ function FAQItem({ item, index }) {
   );
 }
 
-// ============================================================
-// FOOTER
-// ============================================================
 function Footer() {
   return (
     <footer className="border-t border-white/5 bg-[#050512]">
@@ -282,25 +282,25 @@ function Footer() {
         <div className="max-w-6xl mx-auto px-5 md:px-8 py-6 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
             <span className="font-black text-lg text-white">
-              KI<span className="text-violet-400">.</span>
+              SH<span className="text-violet-400">.</span>
             </span>
             <span className="text-slate-600 text-xs">Showcase Hub</span>
           </div>
 
           <p className="text-slate-600 text-xs text-center">
-            © {new Date().getFullYear()} Showcase Hub by Kingsley Ibanga. All rights reserved.
+            © {new Date().getFullYear()} Showcase Hub. All rights reserved.
           </p>
 
           <div className="flex items-center gap-4">
-            <a href="https://github.com/kingsleyibanga77-sudo" target="_blank" rel="noreferrer"
+            <a href="https://github.com" target="_blank" rel="noreferrer"
               className="text-slate-600 hover:text-violet-400 text-xs transition-colors"
             >
               GitHub
             </a>
             <span className="text-slate-800">·</span>
-            <Link to="/login" className="text-slate-600 hover:text-violet-400 text-xs transition-colors">Privacy</Link>
+            <Link to="/privacy" className="text-slate-600 hover:text-violet-400 text-xs transition-colors">Privacy</Link>
             <span className="text-slate-800">·</span>
-            <Link to="/login" className="text-slate-600 hover:text-violet-400 text-xs transition-colors">Terms</Link>
+            <Link to="/terms" className="text-slate-600 hover:text-violet-400 text-xs transition-colors">Terms</Link>
           </div>
         </div>
       </div>
@@ -324,7 +324,7 @@ export default function Welcome() {
         className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-5 md:px-8 py-4 bg-[#07071a]/80 backdrop-blur-md border-b border-white/5"
       >
         <div className="font-black text-lg md:text-xl">
-          KI<span className="text-violet-400">.</span>
+          SH<span className="text-violet-400">.</span>
           <span className="text-slate-500 text-xs md:text-sm font-normal ml-1 md:ml-2 hidden sm:inline">Showcase</span>
         </div>
         <div className="flex items-center gap-2 md:gap-4">

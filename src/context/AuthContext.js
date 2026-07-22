@@ -14,23 +14,76 @@ export function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          // Load all Firestore data into localStorage before setting user
-          await loadAllUserData(firebaseUser.uid);
+          // Load ALL data from Firestore and merge into localStorage
+          const firestoreData = await loadAllUserData(firebaseUser.uid);
+
+          if (firestoreData) {
+            // Merge Firestore data into localStorage — Firestore wins on conflicts
+            const existing = (() => {
+              try {
+                const s = localStorage.getItem("user_prefs");
+                return s ? JSON.parse(s) : {};
+              } catch { return {}; }
+            })();
+
+            const merged = { ...existing, ...firestoreData };
+            localStorage.setItem("user_prefs", JSON.stringify(merged));
+
+            // Sync projects
+            if (firestoreData.customProjects) {
+              localStorage.setItem("custom_projects", JSON.stringify(firestoreData.customProjects));
+            }
+
+            // Sync skills
+            if (firestoreData.skills) {
+              localStorage.setItem("user_skills", JSON.stringify(firestoreData.skills));
+              // Also build skills_data grouped object
+              const grouped = {};
+              firestoreData.skills.forEach((skill) => {
+                const cat = skill.category || "Other";
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push({
+                  name: skill.name,
+                  level: skill.level || 50,
+                  icon: skill.icon || "⭐",
+                  projects: skill.projects || [],
+                });
+              });
+              localStorage.setItem("skills_data", JSON.stringify(grouped));
+            }
+
+            // Sync deleted defaults
+            if (firestoreData.deletedDefaultProjects) {
+              localStorage.setItem(
+                "deleted_default_projects",
+                JSON.stringify(firestoreData.deletedDefaultProjects)
+              );
+            }
+          }
         } catch (err) {
-          console.error("Failed to load user data:", err);
+          console.error("Failed to load user data from Firestore:", err);
+          // Fall back to localStorage — data still works offline
         }
+
         setUser(firebaseUser);
       } else {
         setUser(null);
+        // Don't clear localStorage on logout — preserve for next login
       }
+
       setDataLoaded(true);
       setLoading(false);
     });
+
     return unsubscribe;
   }, []);
 
   const logout = async () => {
-    await signOut(auth);
+    try {
+      await signOut(auth);
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
     setUser(null);
   };
 

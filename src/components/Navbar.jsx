@@ -80,16 +80,31 @@ export default function Navbar({ onAddProject }) {
       >
         <div className="flex justify-between items-center px-6 md:px-10 py-4">
 
-          {/* Logo */}
-          <Link
-            to="/home"
-            className={`font-black text-xl tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}
-          >
-            KI<span className="text-cyan-400">.</span>
-            <span className={`text-sm font-normal ml-2 hidden sm:inline ${isDark ? "text-slate-500" : "text-slate-400"}`}>
-              Showcase
-            </span>
-          </Link>
+          {/* Logo + Welcome button */}
+          <div className="flex items-center gap-3">
+            <Link
+              to="/home"
+              className={`font-black text-xl tracking-tight ${isDark ? "text-white" : "text-slate-900"}`}
+            >
+              SH<span className="text-cyan-400">.</span>
+              <span className={`text-sm font-normal ml-2 hidden sm:inline ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+                Showcase Hub
+              </span>
+            </Link>
+
+            {/* Always-visible Welcome page link */}
+            <Link
+              to="/welcome"
+              title="Go to Welcome Page"
+              className={`hidden sm:flex items-center gap-1 text-[10px] tracking-widest uppercase px-2.5 py-1 rounded-full border transition-all duration-200 ${
+                isDark
+                  ? "border-violet-500/30 text-violet-400 hover:bg-violet-500/10 hover:border-violet-400"
+                  : "border-violet-400/40 text-violet-600 hover:bg-violet-50 hover:border-violet-500"
+              }`}
+            >
+              ✦ Welcome
+            </Link>
+          </div>
 
           {/* Desktop nav */}
           <div className="hidden md:flex gap-6 items-center">
@@ -196,7 +211,7 @@ export default function Navbar({ onAddProject }) {
             </div>
 
             {/* GitHub */}
-            <a href="https://github.com/kingsleyibanga77-sudo" target="_blank" rel="noreferrer"
+            <a href={prefs?.githubUsername ? `https://github.com/${prefs.githubUsername}` : "https://github.com"} target="_blank" rel="noreferrer"
               className="text-xs tracking-widest uppercase px-4 py-2 border border-cyan-500/50 text-cyan-400 rounded-lg hover:bg-cyan-500/10 transition-all duration-200"
             >
               GitHub
@@ -352,7 +367,6 @@ export default function Navbar({ onAddProject }) {
                   { label: "🗂️ View Projects", to: "/projects" },
                   { label: "⚙️ Settings", to: "/settings" },
                   { label: "🛟 Support", to: "/support" },
-                  { label: "ℹ️ Welcome Page", to: "/welcome" },
                 ].map(({ label, to }) => (
                   <Link key={to} to={to}
                     className={`block px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
@@ -365,6 +379,17 @@ export default function Navbar({ onAddProject }) {
                   </Link>
                 ))}
 
+                {/* Highlighted Welcome Page link */}
+                <Link to="/welcome"
+                  className={`block px-4 py-3 rounded-xl text-sm font-semibold transition-all border ${
+                    isDark
+                      ? "text-violet-400 border-violet-500/30 hover:bg-violet-500/10"
+                      : "text-violet-600 border-violet-400/40 hover:bg-violet-50"
+                  }`}
+                >
+                  ✦ Welcome Page
+                </Link>
+
                 <button
                   onClick={() => { setMobileOpen(false); onAddProject && onAddProject(); }}
                   className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold text-cyan-400 hover:bg-cyan-500/10 transition-all"
@@ -372,7 +397,7 @@ export default function Navbar({ onAddProject }) {
                   ➕ Add Project
                 </button>
 
-                <a href="https://github.com/kingsleyibanga77-sudo" target="_blank" rel="noreferrer"
+                <a href={prefs?.githubUsername ? `https://github.com/${prefs.githubUsername}` : "https://github.com"} target="_blank" rel="noreferrer"
                   className={`block px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
                     isDark ? "text-slate-300 hover:bg-slate-800" : "text-slate-600 hover:bg-slate-50"
                   }`}

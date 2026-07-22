@@ -164,7 +164,7 @@ export default function LoadingScreen({ onComplete, user }) {
       return (parts[0]?.[0] || "") + (parts[1]?.[0] || "");
     }
     if (user?.email) return user.email[0].toUpperCase();
-    return "KI";
+    return "SH";
   };
 
   const color1 = prefs?.color1 || "#06b6d4";
@@ -264,14 +264,14 @@ export default function LoadingScreen({ onComplete, user }) {
               </motion.div>
             </div>
 
-            {/* Name */}
+            {/* Tagline */}
             <motion.p
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.6 }}
               className="text-slate-500 text-xs tracking-[0.5em] uppercase mb-8"
             >
-              {user?.displayName || "Showcase Hub"}
+              Showcase Hub
             </motion.p>
 
             {/* Progress bar */}

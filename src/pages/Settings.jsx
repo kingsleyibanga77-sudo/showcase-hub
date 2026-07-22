@@ -273,11 +273,14 @@ export default function Settings() {
   };
 
   const prefs = loadPrefs();
-  const [displayName] = useState(
+  const [displayName, setDisplayName] = useState(
     prefs.displayName || auth.currentUser?.displayName || ""
   );
   const [username, setUsername] = useState(prefs.username || "");
   const [githubUsername, setGithubUsername] = useState(prefs.githubUsername || "");
+  const [linkedinUrl, setLinkedinUrl] = useState(prefs.linkedinUrl || "");
+  const [twitterUrl, setTwitterUrl] = useState(prefs.twitterUrl || "");
+  const [youtubeUrl, setYoutubeUrl] = useState(prefs.youtubeUrl || "");
   const [profileImage, setProfileImage] = useState(prefs.profileImage || "");
   const [selectedPreset, setSelectedPreset] = useState(
     Math.max(COLOR_PRESETS.findIndex((p) => p.color1 === prefs.color1), 0)
@@ -331,6 +334,9 @@ export default function Settings() {
         displayName: displayName.trim(),
         username: username.trim(),
         githubUsername: githubUsername.trim(),
+        linkedinUrl: linkedinUrl.trim(),
+        twitterUrl: twitterUrl.trim(),
+        youtubeUrl: youtubeUrl.trim(),
         initials: getInitials(displayName),
         color1,
         color2,
@@ -588,6 +594,52 @@ export default function Settings() {
                     >
                       {loading ? "Saving..." : savedMsg ? "✓ Saved!" : "Save Profile"}
                     </button>
+                    {/* LinkedIn */}
+                    <div className="mb-4">
+                      <label className="text-xs tracking-widest uppercase text-slate-400 mb-2 block">LinkedIn URL</label>
+                      <div className={`flex items-center border rounded-xl overflow-hidden transition-colors focus-within:border-cyan-500 ${
+                        isDark ? "bg-slate-800 border-slate-700" : "bg-slate-50 border-slate-200"
+                      }`}>
+                        <span className={`pl-4 pr-2 text-sm flex-shrink-0 ${isDark ? "text-slate-500" : "text-slate-400"}`}>linkedin.com/in/</span>
+                        <input type="text" value={linkedinUrl}
+                          onChange={(e) => setLinkedinUrl(e.target.value.trim())}
+                          placeholder="yourprofile"
+                          className={`flex-1 bg-transparent pr-4 py-3 text-sm focus:outline-none ${isDark ? "text-slate-200 placeholder-slate-600" : "text-slate-800 placeholder-slate-400"}`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Twitter/X */}
+                    <div className="mb-4">
+                      <label className="text-xs tracking-widest uppercase text-slate-400 mb-2 block">Twitter / X Handle</label>
+                      <div className={`flex items-center border rounded-xl overflow-hidden transition-colors focus-within:border-cyan-500 ${
+                        isDark ? "bg-slate-800 border-slate-700" : "bg-slate-50 border-slate-200"
+                      }`}>
+                        <span className={`pl-4 pr-2 text-sm flex-shrink-0 ${isDark ? "text-slate-500" : "text-slate-400"}`}>@</span>
+                        <input type="text" value={twitterUrl}
+                          onChange={(e) => setTwitterUrl(e.target.value.trim())}
+                          placeholder="yourhandle"
+                          className={`flex-1 bg-transparent pr-4 py-3 text-sm focus:outline-none ${isDark ? "text-slate-200 placeholder-slate-600" : "text-slate-800 placeholder-slate-400"}`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* YouTube */}
+                    <div className="mb-6">
+                      <label className="text-xs tracking-widest uppercase text-slate-400 mb-2 block">YouTube Channel</label>
+                      <div className={`flex items-center border rounded-xl overflow-hidden transition-colors focus-within:border-cyan-500 ${
+                        isDark ? "bg-slate-800 border-slate-700" : "bg-slate-50 border-slate-200"
+                      }`}>
+                        <span className={`pl-4 pr-2 text-sm flex-shrink-0 ${isDark ? "text-slate-500" : "text-slate-400"}`}>youtube.com/</span>
+                        <input type="text" value={youtubeUrl}
+                          onChange={(e) => setYoutubeUrl(e.target.value.trim())}
+                          placeholder="@yourchannel"
+                          className={`flex-1 bg-transparent pr-4 py-3 text-sm focus:outline-none ${isDark ? "text-slate-200 placeholder-slate-600" : "text-slate-800 placeholder-slate-400"}`}
+                        />
+                      </div>
+                      <p className="text-slate-500 text-xs mt-1">These appear on your Landing page footer and public profile.</p>
+                    </div>
+
                     <div className={`mb-6 p-4 rounded-xl border ${isDark ? "border-slate-700 bg-slate-800/50" : "border-slate-200 bg-slate-50"}`}>
                       <p className={`font-semibold text-sm mb-1 ${isDark ? "text-white" : "text-slate-900"}`}>
                         🔗 Your Portfolio Link
@@ -929,7 +981,7 @@ export default function Settings() {
 
         {/* Page footer */}
         <div className="mt-12 pt-6 border-t border-slate-200 dark:border-slate-800 max-w-4xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 dark:text-slate-600">
-          <span>© {new Date().getFullYear()} KI. Showcase Hub</span>
+          <span>© {new Date().getFullYear()} Showcase Hub</span>
           <div className="flex items-center gap-3">
             <Link to="/welcome" className="hover:text-violet-400 transition-colors">About</Link>
             <span>·</span>

@@ -12,37 +12,33 @@ import { db } from "../firebase";
 // ============================================================
 // USER PREFS
 // ============================================================
-
-// Save full user profile to Firestore
 export const saveUserPrefs = async (userId, prefs) => {
   try {
     await setDoc(doc(db, "users", userId), {
       ...prefs,
       updatedAt: new Date().toISOString(),
     }, { merge: true });
-    // Also save to localStorage as cache
     localStorage.setItem("user_prefs", JSON.stringify(prefs));
     return true;
   } catch (err) {
     console.error("Failed to save prefs:", err);
+    // Still save to localStorage as fallback
+    localStorage.setItem("user_prefs", JSON.stringify(prefs));
     return false;
   }
 };
 
-// Load user profile from Firestore
 export const loadUserPrefs = async (userId) => {
   try {
     const snap = await getDoc(doc(db, "users", userId));
     if (snap.exists()) {
       const data = snap.data();
-      // Cache locally
       localStorage.setItem("user_prefs", JSON.stringify(data));
       return data;
     }
     return null;
   } catch (err) {
     console.error("Failed to load prefs:", err);
-    // Fall back to localStorage
     try {
       const saved = localStorage.getItem("user_prefs");
       return saved ? JSON.parse(saved) : null;
@@ -53,8 +49,6 @@ export const loadUserPrefs = async (userId) => {
 // ============================================================
 // PROJECTS
 // ============================================================
-
-// Save all custom projects
 export const saveProjects = async (userId, projects) => {
   try {
     await setDoc(doc(db, "users", userId), {
@@ -65,11 +59,11 @@ export const saveProjects = async (userId, projects) => {
     return true;
   } catch (err) {
     console.error("Failed to save projects:", err);
+    localStorage.setItem("custom_projects", JSON.stringify(projects));
     return false;
   }
 };
 
-// Load custom projects
 export const loadProjects = async (userId) => {
   try {
     const snap = await getDoc(doc(db, "users", userId));
@@ -88,7 +82,6 @@ export const loadProjects = async (userId) => {
   }
 };
 
-// Save deleted default project IDs
 export const saveDeletedDefaults = async (userId, deletedIds) => {
   try {
     await setDoc(doc(db, "users", userId), {
@@ -99,6 +92,7 @@ export const saveDeletedDefaults = async (userId, deletedIds) => {
     return true;
   } catch (err) {
     console.error("Failed to save deleted defaults:", err);
+    localStorage.setItem("deleted_default_projects", JSON.stringify(deletedIds));
     return false;
   }
 };
@@ -106,8 +100,6 @@ export const saveDeletedDefaults = async (userId, deletedIds) => {
 // ============================================================
 // SKILLS
 // ============================================================
-
-// Save skills
 export const saveSkills = async (userId, skills) => {
   try {
     await setDoc(doc(db, "users", userId), {
@@ -118,11 +110,11 @@ export const saveSkills = async (userId, skills) => {
     return true;
   } catch (err) {
     console.error("Failed to save skills:", err);
+    localStorage.setItem("user_skills", JSON.stringify(skills));
     return false;
   }
 };
 
-// Load skills
 export const loadSkills = async (userId) => {
   try {
     const snap = await getDoc(doc(db, "users", userId));
@@ -144,30 +136,24 @@ export const loadSkills = async (userId) => {
 // ============================================================
 // PUBLIC VIEW — load by username
 // ============================================================
-
 export const loadPublicProfile = async (username) => {
   try {
-    // Query Firestore for user with matching username
     const usersRef = collection(db, "users");
-    const q = query(
-      usersRef,
-      where("username", "==", username.toLowerCase())
-    );
+
+    // Try exact match first
+    const q = query(usersRef, where("username", "==", username));
     const snap = await getDocs(q);
+    if (!snap.empty) return snap.docs[0].data();
 
-    if (!snap.empty) {
-      return snap.docs[0].data();
-    }
-
-    // Also try matching displayName as fallback
-    const q2 = query(
-      usersRef,
-      where("username", "==", username)
-    );
+    // Try lowercase
+    const q2 = query(usersRef, where("username", "==", username.toLowerCase()));
     const snap2 = await getDocs(q2);
-    if (!snap2.empty) {
-      return snap2.docs[0].data();
-    }
+    if (!snap2.empty) return snap2.docs[0].data();
+
+    // Try displayName as fallback
+    const q3 = query(usersRef, where("displayName", "==", username));
+    const snap3 = await getDocs(q3);
+    if (!snap3.empty) return snap3.docs[0].data();
 
     return null;
   } catch (err) {
@@ -177,27 +163,41 @@ export const loadPublicProfile = async (username) => {
 };
 
 // ============================================================
-// LOAD ALL USER DATA AT ONCE (on login)
+// LOAD ALL USER DATA ON LOGIN
 // ============================================================
-
 export const loadAllUserData = async (userId) => {
   try {
     const snap = await getDoc(doc(db, "users", userId));
     if (snap.exists()) {
       const data = snap.data();
+
       // Cache everything to localStorage
-      if (data.username || data.displayName) {
-        localStorage.setItem("user_prefs", JSON.stringify(data));
+      if (data) {
+        // Prefs
+        const existingPrefs = (() => {
+          try {
+            const s = localStorage.getItem("user_prefs");
+            return s ? JSON.parse(s) : {};
+          } catch { return {}; }
+        })();
+        localStorage.setItem("user_prefs", JSON.stringify({ ...existingPrefs, ...data }));
+
+        // Projects
+        if (Array.isArray(data.customProjects)) {
+          localStorage.setItem("custom_projects", JSON.stringify(data.customProjects));
+        }
+
+        // Skills
+        if (Array.isArray(data.skills)) {
+          localStorage.setItem("user_skills", JSON.stringify(data.skills));
+        }
+
+        // Deleted defaults
+        if (Array.isArray(data.deletedDefaultProjects)) {
+          localStorage.setItem("deleted_default_projects", JSON.stringify(data.deletedDefaultProjects));
+        }
       }
-      if (data.customProjects) {
-        localStorage.setItem("custom_projects", JSON.stringify(data.customProjects));
-      }
-      if (data.skills) {
-        localStorage.setItem("user_skills", JSON.stringify(data.skills));
-      }
-      if (data.deletedDefaultProjects) {
-        localStorage.setItem("deleted_default_projects", JSON.stringify(data.deletedDefaultProjects));
-      }
+
       return data;
     }
     return null;

@@ -12,6 +12,9 @@ import UserSetup from "./pages/UserSetup";
 import Settings from "./pages/Settings";
 import Support from "./pages/Support";
 import PublicView from "./pages/PublicView";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Admin from "./pages/Admin";
 import AddProjectModal from "./components/AddProjectModal";
 import PageTransition from "./components/PageTransition";
 import LoadingScreen from "./components/LoadingScreen";
@@ -137,6 +140,22 @@ function AnimatedRoutes() {
           {/* Public view — no auth required */}
           <Route path="/view/:username" element={
             <PageTransition><PublicView /></PageTransition>
+          } />
+
+          {/* Legal pages — public */}
+          <Route path="/privacy" element={
+            <PageTransition><Privacy /></PageTransition>
+          } />
+
+          <Route path="/terms" element={
+            <PageTransition><Terms /></PageTransition>
+          } />
+
+          {/* Admin — protected by email check inside component */}
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <PageTransition><Admin /></PageTransition>
+            </ProtectedRoute>
           } />
 
           {/* Protected routes */}

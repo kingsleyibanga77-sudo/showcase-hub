@@ -208,7 +208,7 @@ function WhatsInside({ isDark }) {
 // ============================================================
 // LANDING FOOTER BAR
 // ============================================================
-function LandingFooter({ isDark }) {
+function LandingFooter({ isDark, prefs }) {
   return (
     <footer className={`relative z-10 border-t ${
       isDark ? "border-cyan-500/10 bg-slate-950/80" : "border-slate-200 bg-white/80"
@@ -216,17 +216,18 @@ function LandingFooter({ isDark }) {
       <div className="px-6 md:px-16 py-6 flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-3">
           <span className={`font-black text-lg ${isDark ? "text-white" : "text-slate-900"}`}>
-            KI<span className="text-cyan-400">.</span>
+            SH<span className="text-cyan-400">.</span>
           </span>
           <span className="text-slate-500 text-xs">Showcase Hub</span>
         </div>
 
         <div className="flex items-center gap-4">
           {[
-            { label: "GitHub", href: "https://github.com/kingsleyibanga77-sudo" },
-            { label: "LinkedIn", href: "#" },
-            { label: "Twitter", href: "#" },
-          ].map(({ label, href }) => (
+            { label: "GitHub", href: prefs?.githubUsername ? `https://github.com/${prefs.githubUsername}` : null },
+            { label: "LinkedIn", href: prefs?.linkedinUrl ? `https://linkedin.com/in/${prefs.linkedinUrl}` : null },
+            { label: "Twitter", href: prefs?.twitterUrl ? `https://x.com/${prefs.twitterUrl}` : null },
+            { label: "YouTube", href: prefs?.youtubeUrl ? `https://youtube.com/${prefs.youtubeUrl}` : null },
+          ].filter(s => s.href).map(({ label, href }) => (
             <a key={label} href={href} target="_blank" rel="noreferrer"
               className={`text-xs transition-colors duration-200 ${
                 isDark ? "text-slate-600 hover:text-cyan-400" : "text-slate-400 hover:text-cyan-600"
@@ -240,11 +241,11 @@ function LandingFooter({ isDark }) {
         <div className={`flex items-center gap-3 text-xs ${isDark ? "text-slate-700" : "text-slate-400"}`}>
           <Link to="/welcome" className="hover:text-violet-400 transition-colors">About</Link>
           <span>·</span>
-          <Link to="/welcome" className="hover:text-slate-500 transition-colors">Privacy</Link>
+          <Link to="/privacy" className="hover:text-slate-500 transition-colors">Privacy</Link>
           <span>·</span>
-          <Link to="/welcome" className="hover:text-slate-500 transition-colors">Terms</Link>
+          <Link to="/terms" className="hover:text-slate-500 transition-colors">Terms</Link>
           <span>·</span>
-          <span>© {new Date().getFullYear()} KI.</span>
+          <span>© {new Date().getFullYear()} Showcase Hub.</span>
         </div>
       </div>
     </footer>
@@ -267,10 +268,10 @@ export default function Landing() {
 
   const [profileImage, setProfileImage] = useState(prefs?.profileImage || "");
 
-  const username = prefs?.username || prefs?.displayName || "Kingsley Ibanga";
+  const username = prefs?.username || prefs?.displayName || "";
   const usernameParts = username.trim().split(" ");
-  const isSingleWord = usernameParts.length === 1;
-  const usernameFirst = usernameParts[0] || "Kingsley";
+  const isSingleWord = usernameParts.length === 1 || usernameParts[1] === "";
+  const usernameFirst = usernameParts[0] || "Showcase";
   const usernameLast = usernameParts.slice(1).join(" ") || "";
 
   const tagline = prefs?.tagline || "Developer · Data Engineer · Web3 Builder";
@@ -433,7 +434,7 @@ export default function Landing() {
             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
               onMouseEnter={() => setHoveredBtn("github")}
               onMouseLeave={() => setHoveredBtn(null)}
-              onClick={() => window.open("https://github.com/kingsleyibanga77-sudo", "_blank")}
+              onClick={() => window.open(prefs?.githubUsername ? `https://github.com/${prefs.githubUsername}` : "https://github.com", "_blank")}
               className={`relative z-20 px-6 py-3 rounded-xl font-semibold text-sm tracking-widest uppercase border transition-all duration-300 ${
                 isDark
                   ? "border-cyan-500/60 text-cyan-300 hover:border-cyan-300 hover:bg-cyan-500/10"
@@ -496,7 +497,7 @@ export default function Landing() {
       <WhatsInside isDark={isDark} />
 
       {/* Footer */}
-      <LandingFooter isDark={isDark} />
+      <LandingFooter isDark={isDark} prefs={prefs} />
     </div>
   );
 }

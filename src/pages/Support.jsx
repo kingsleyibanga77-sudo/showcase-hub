@@ -194,7 +194,7 @@ export default function Support() {
       }\n\n**Reported by:** ${user?.email || "Anonymous"}`
     );
     const labels = encodeURIComponent(selectedTypeData?.githubLabel || "");
-    return `https://github.com/kingsleyibanga77-sudo/showcase-hub/issues/new?title=${title}&body=${body}&labels=${labels}`;
+    return `https://github.com/showcase-hub-app/showcase-hub/issues/new?title=${title}&body=${body}&labels=${labels}`;
   };
 
   const finalSubject = subject === "other" ? customSubject : subject;
@@ -632,7 +632,7 @@ export default function Support() {
                 {REPORT_TYPES.map((type, i) => (
                   <motion.a
                     key={type.id}
-                    href={`https://github.com/kingsleyibanga77-sudo/showcase-hub/issues/new?labels=${type.githubLabel}&template=${type.id}.md`}
+                    href={`https://github.com/showcase-hub-app/showcase-hub/issues/new?labels=${type.githubLabel}&template=${type.id}.md`}
                     target="_blank"
                     rel="noreferrer"
                     initial={{ opacity: 0, x: -20 }}
@@ -666,7 +666,7 @@ export default function Support() {
                   </div>
                 </div>
                 <a
-                  href="https://github.com/kingsleyibanga77-sudo/showcase-hub/issues"
+                  href="https://github.com/showcase-hub-app/showcase-hub/issues"
                   target="_blank"
                   rel="noreferrer"
                   className="block w-full text-center py-3 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-xl text-xs tracking-widest uppercase hover:border-cyan-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-all"

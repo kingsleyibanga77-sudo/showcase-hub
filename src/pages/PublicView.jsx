@@ -135,30 +135,47 @@ export default function PublicView() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-  const fetchProfile = async () => {
+    // Load from localStorage (same device only for now)
     try {
-      const { loadPublicProfile } = await import("../services/db");
-      const data = await loadPublicProfile(username);
+      const savedPrefs = localStorage.getItem("user_prefs");
+      const parsedPrefs = savedPrefs ? JSON.parse(savedPrefs) : null;
 
-      if (!data) {
+      if (!parsedPrefs) {
         setNotFound(true);
         return;
       }
 
-      setPrefs(data);
-      const deletedIds = data.deletedDefaultProjects || [];
-      const visibleDefaults = defaultProjects.filter(
-        (p) => !deletedIds.includes(p.id)
-      );
-      setProjects([...visibleDefaults, ...(data.customProjects || [])]);
-      setSkills(data.skills || []);
+      // Match username (case insensitive)
+      const storedUsername = (parsedPrefs.username || parsedPrefs.displayName || "").toLowerCase();
+      const requestedUsername = (username || "").toLowerCase();
+
+      if (storedUsername !== requestedUsername && requestedUsername !== "preview") {
+        setNotFound(true);
+        return;
+      }
+
+      setPrefs(parsedPrefs);
+
+      // Load projects
+      const savedCustom = localStorage.getItem("custom_projects");
+      const customProjects = savedCustom ? JSON.parse(savedCustom) : [];
+      const deletedDefaults = (() => {
+        try {
+          const s = localStorage.getItem("deleted_default_projects");
+          return s ? JSON.parse(s) : [];
+        } catch { return []; }
+      })();
+      const visibleDefaults = defaultProjects.filter((p) => !deletedDefaults.includes(p.id));
+      setProjects([...visibleDefaults, ...customProjects]);
+
+      // Load skills
+      const savedSkills = localStorage.getItem("user_skills");
+      if (savedSkills) setSkills(JSON.parse(savedSkills));
+
     } catch {
       setNotFound(true);
     }
-  };
-
-  fetchProfile();
-}, [username]);
+  }, [username]);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -361,7 +378,7 @@ export default function PublicView() {
       {/* Footer */}
       <div className="border-t border-slate-800 px-5 py-6 text-center">
         <p className="text-slate-600 text-xs mb-2">
-          Portfolio powered by <span className="text-cyan-500">KI. Showcase Hub</span>
+          Portfolio powered by <span className="text-cyan-500">Showcase Hub</span>
         </p>
         <Link to="/welcome"
           className="text-xs tracking-widest uppercase text-slate-500 hover:text-cyan-400 transition-colors"

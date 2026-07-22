@@ -139,42 +139,39 @@ export default function UserSetup() {
   };
 
   const handleSave = async () => {
-  setLoading(true);
-  try {
-    await updateProfile(auth.currentUser, { displayName: fullName.trim() });
+    setLoading(true);
+    try {
+      await updateProfile(auth.currentUser, { displayName: fullName.trim() });
 
-    const prefs = {
-      fullName: fullName.trim(),
-      displayName: fullName.trim(),
-      username: displayName.trim().toLowerCase(),
-      initials: getInitials(fullName),
-      color1,
-      color2,
-    };
+      localStorage.setItem(
+        "user_prefs",
+        JSON.stringify({
+          fullName: fullName.trim(),
+          displayName: fullName.trim(),
+          username: displayName.trim(),
+          initials: getInitials(fullName),
+          color1,
+          color2,
+        })
+      );
 
-    // Save to Firestore + localStorage
-    const { saveUserPrefs, saveSkills } = await import("../services/db");
-    await saveUserPrefs(auth.currentUser.uid, prefs);
+      if (selectedSkills.length > 0) {
+        const skillData = selectedSkills.map((skill, i) => ({
+          id: Date.now() + i,
+          name: skill,
+          level: 50,
+          category: SKILL_CATEGORIES.find((c) => c.skills.includes(skill))?.category || "Other",
+        }));
+        localStorage.setItem("user_skills", JSON.stringify(skillData));
+      }
 
-    if (selectedSkills.length > 0) {
-      const skillData = selectedSkills.map((skill, i) => ({
-        id: Date.now() + i,
-        name: skill,
-        level: 50,
-        category: SKILL_CATEGORIES.find((c) =>
-          c.skills.includes(skill)
-        )?.category || "Other",
-      }));
-      await saveSkills(auth.currentUser.uid, skillData);
+      navigate("/home");
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    navigate("/home");
-  } catch {
-    setError("Something went wrong. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center px-4 py-10">
@@ -258,7 +255,7 @@ export default function UserSetup() {
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleNext()}
-                    placeholder="e.g. Kingsley, KI, King..."
+                    placeholder="e.g. John, JD, Designer..."
                     className="w-full bg-slate-800 border border-slate-700 text-slate-200 placeholder-slate-600 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-cyan-500 transition-colors mb-2"
                   />
                   <p className="text-slate-600 text-xs">

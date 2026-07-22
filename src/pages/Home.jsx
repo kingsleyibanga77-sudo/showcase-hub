@@ -417,7 +417,7 @@ export default function Home({ customProjects = [], onAddProject, deletedDefault
 
       {/* Page footer */}
       <div className="mt-16 pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 dark:text-slate-600">
-        <span>© {new Date().getFullYear()} KI. Showcase Hub</span>
+        <span>© {new Date().getFullYear()} Showcase Hub</span>
         <div className="flex items-center gap-3">
           <Link to="/welcome" className="hover:text-violet-400 transition-colors">About</Link>
           <span>·</span>
