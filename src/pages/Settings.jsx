@@ -8,6 +8,7 @@ import {
   reauthenticateWithCredential,
 } from "firebase/auth";
 import { auth } from "../firebase";
+import { saveUserPrefs } from "../services/db";
 import { HexagonMonogram } from "../components/LoadingScreen";
 import { useTheme } from "../context/ThemeContext";
 
@@ -61,7 +62,7 @@ function ImageModal({ onClose, onSave, onDelete, currentImage }) {
       >
         <div className="flex justify-between items-center mb-5">
           <h3 className="text-white font-black text-lg">Profile Image</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-200 text-xl">✕</button>
+          <button aria-label="Close" onClick={onClose} className="text-slate-400 hover:text-slate-200 text-xl">✕</button>
         </div>
 
         <div className="flex gap-2 mb-4">
@@ -110,6 +111,8 @@ function ImageModal({ onClose, onSave, onDelete, currentImage }) {
         <div className="flex gap-3">
           {currentImage && !currentImage.includes("placehold") && (
             <button onClick={() => { onDelete(); onClose(); }}
+              aria-label="Remove image"
+              title="Remove image"
               className="px-3 py-2.5 border border-red-500/30 text-red-400 rounded-xl text-sm hover:bg-red-500/10 transition-all"
             >
               🗑️
@@ -273,7 +276,7 @@ export default function Settings() {
   };
 
   const prefs = loadPrefs();
-  const [displayName, setDisplayName] = useState(
+  const [displayName] = useState(
     prefs.displayName || auth.currentUser?.displayName || ""
   );
   const [username, setUsername] = useState(prefs.username || "");
@@ -323,39 +326,43 @@ export default function Settings() {
     return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase();
   };
 
-  const initials = getInitials(displayName || "KI");
+  const initials = getInitials(displayName || "SH");
 
   const savePrefs = (extra = {}) => {
     const current = loadPrefs();
-    localStorage.setItem(
-      "user_prefs",
-      JSON.stringify({
-        ...current,
-        displayName: displayName.trim(),
-        username: username.trim(),
-        githubUsername: githubUsername.trim(),
-        linkedinUrl: linkedinUrl.trim(),
-        twitterUrl: twitterUrl.trim(),
-        youtubeUrl: youtubeUrl.trim(),
-        initials: getInitials(displayName),
-        color1,
-        color2,
-        tagline,
-        badges,
-        stats,
-        ...extra,
-      })
-    );
+    const next = {
+      ...current,
+      displayName: displayName.trim(),
+      username: username.trim(),
+      githubUsername: githubUsername.trim(),
+      linkedinUrl: linkedinUrl.trim(),
+      twitterUrl: twitterUrl.trim(),
+      youtubeUrl: youtubeUrl.trim(),
+      initials: getInitials(displayName),
+      color1,
+      color2,
+      tagline,
+      badges,
+      stats,
+      ...extra,
+    };
+    localStorage.setItem("user_prefs", JSON.stringify(next));
+    // Sync to Firestore so changes reach the public view and other devices.
+    if (auth.currentUser) {
+      saveUserPrefs(auth.currentUser.uid, next);
+    }
   };
 
   const handleSave = async () => {
     setError("");
-    if (!displayName.trim()) return setError("Name cannot be empty.");
-    if (displayName.trim().split(" ").length < 2)
-      return setError("Please enter both first and last name.");
+    // The Full Name field is read-only here (set during onboarding), so we
+    // don't re-validate its format — doing so would block single-word-name
+    // users from saving profile/social changes they *can* edit.
     setLoading(true);
     try {
-      await updateProfile(auth.currentUser, { displayName: displayName.trim() });
+      if (displayName.trim()) {
+        await updateProfile(auth.currentUser, { displayName: displayName.trim() });
+      }
       savePrefs();
       setSavedMsg(true);
       setTimeout(() => setSavedMsg(false), 3000);
@@ -547,7 +554,7 @@ export default function Settings() {
                         type="text"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        placeholder="e.g. Kingsley, KI, King..."
+                        placeholder="e.g. your name or handle"
                         className={inputClass}
                       />
                       <p className="text-slate-500 text-xs mt-1">
@@ -587,13 +594,6 @@ export default function Settings() {
                       <p className="text-red-400 text-sm mb-4 bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2">{error}</p>
                     )}
 
-                    <button
-                      onClick={handleSave}
-                      disabled={loading}
-                      className="w-full sm:w-auto px-6 py-3 bg-cyan-500 text-white rounded-xl text-sm font-semibold tracking-widest uppercase hover:bg-cyan-400 transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] disabled:opacity-50"
-                    >
-                      {loading ? "Saving..." : savedMsg ? "✓ Saved!" : "Save Profile"}
-                    </button>
                     {/* LinkedIn */}
                     <div className="mb-4">
                       <label className="text-xs tracking-widest uppercase text-slate-400 mb-2 block">LinkedIn URL</label>
@@ -664,6 +664,14 @@ export default function Settings() {
                         Update your Display Name above to change the link.
                       </p>
                     </div>
+
+                    <button
+                      onClick={handleSave}
+                      disabled={loading}
+                      className="w-full sm:w-auto px-6 py-3 bg-cyan-500 text-white rounded-xl text-sm font-semibold tracking-widest uppercase hover:bg-cyan-400 transition-all shadow-[0_0_20px_rgba(6,182,212,0.3)] disabled:opacity-50"
+                    >
+                      {loading ? "Saving..." : savedMsg ? "✓ Saved!" : "Save Profile"}
+                    </button>
                   </div>
                 )}
 
@@ -811,6 +819,7 @@ export default function Settings() {
                           <div key={i} className="flex items-center gap-1 bg-cyan-500/10 border border-cyan-500/30 rounded-lg px-3 py-1.5">
                             <span className="text-cyan-600 dark:text-cyan-400 text-xs font-semibold">{badge}</span>
                             <button
+                              aria-label={`Remove ${badge}`}
                               onClick={() => setBadges(badges.filter((_, idx) => idx !== i))}
                               className="text-slate-400 hover:text-red-400 transition-colors text-xs ml-1"
                             >✕</button>

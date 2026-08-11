@@ -6,13 +6,18 @@ import SkillsSection from "../components/SkillsSection";
 import defaultProjects from "../data/projects";
 
 const filters = ["Web", "Blockchain", "Data", "Web3"];
-const GITHUB_USERNAME = (() => {
+
+// Read the saved GitHub username fresh (not cached at module load, so it
+// reflects changes made in Settings without a full page reload).
+function getGithubUsername() {
   try {
     const prefs = localStorage.getItem("user_prefs");
     const parsed = prefs ? JSON.parse(prefs) : null;
     return parsed?.githubUsername || null;
-  } catch { return null; }
-})();
+  } catch {
+    return null;
+  }
+}
 
 // ============================================================
 // GITHUB REPO CARD
@@ -67,18 +72,14 @@ export default function Home({ customProjects = [], onAddProject, deletedDefault
   const [repoLoading, setRepoLoading] = useState(true);
   const [repoError, setRepoError] = useState(false);
   const projectsRef = useRef(null);
+  const githubUsername = getGithubUsername();
 
-  const [localCustom] = useState(() => {
-    try {
-      const saved = localStorage.getItem("custom_projects");
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
-
-  // Filter out deleted defaults then combine all projects
+  // Combine default (minus deleted) + custom projects.
+  // `customProjects` is the single source of truth, passed down from App.js
+  // (which owns the custom_projects state). Reading localStorage here too
+  // would render every existing custom project twice.
   const allProjects = [
     ...defaultProjects.filter((p) => !deletedDefaults.includes(p.id)),
-    ...localCustom,
     ...customProjects,
   ];
 
@@ -87,14 +88,14 @@ export default function Home({ customProjects = [], onAddProject, deletedDefault
   };
 
   useEffect(() => {
-    if (!GITHUB_USERNAME) {
+    if (!githubUsername) {
       setRepoLoading(false);
       return;
     }
     const fetchRepos = async () => {
       try {
         const res = await fetch(
-          `https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=updated&per_page=6`
+          `https://api.github.com/users/${githubUsername}/repos?sort=updated&per_page=6`
         );
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
@@ -106,7 +107,7 @@ export default function Home({ customProjects = [], onAddProject, deletedDefault
       }
     };
     fetchRepos();
-  }, []);
+  }, [githubUsername]);
 
   // Category filters
   const toggleFilter = (filter) => {
@@ -284,7 +285,7 @@ export default function Home({ customProjects = [], onAddProject, deletedDefault
               key={project.id}
               project={project}
               index={index}
-              isCustom={true}
+              isCustom={!defaultProjects.some((d) => d.id === project.id)}
               onDelete={handleDelete}
             />
           ))}
@@ -342,7 +343,8 @@ export default function Home({ customProjects = [], onAddProject, deletedDefault
         onFilterBySkill={handleFilterBySkill}
       />
 
-      {/* ===== GITHUB REPOS ===== */}
+      {/* ===== GITHUB REPOS (only when a username is set) ===== */}
+      {githubUsername && (
       <div className="mt-20 md:mt-24">
         <div className="flex items-center gap-4 mb-6">
           <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
@@ -384,7 +386,7 @@ export default function Home({ customProjects = [], onAddProject, deletedDefault
         {repoError && (
           <div className="text-center py-12 border border-slate-200 dark:border-slate-800 rounded-2xl">
             <p className="text-slate-400 dark:text-slate-600 mb-2">Couldn't load GitHub repos.</p>
-            <a href={`https://github.com/${GITHUB_USERNAME}`} target="_blank" rel="noreferrer"
+            <a href={`https://github.com/${githubUsername}`} target="_blank" rel="noreferrer"
               className="text-cyan-500 dark:text-cyan-400 text-sm tracking-widest uppercase hover:text-cyan-600"
             >
               Visit GitHub Profile →
@@ -405,7 +407,7 @@ export default function Home({ customProjects = [], onAddProject, deletedDefault
               viewport={{ once: true }}
               className="text-center mt-8 md:mt-10"
             >
-              <a href={`https://github.com/${GITHUB_USERNAME}`} target="_blank" rel="noreferrer"
+              <a href={`https://github.com/${githubUsername}`} target="_blank" rel="noreferrer"
                 className="inline-block text-xs tracking-widest uppercase px-6 md:px-8 py-3 border border-cyan-500/50 text-cyan-600 dark:text-cyan-400 rounded-xl hover:bg-cyan-500/10 transition-all duration-200"
               >
                 View All Repositories →
@@ -414,6 +416,7 @@ export default function Home({ customProjects = [], onAddProject, deletedDefault
           </>
         )}
       </div>
+      )}
 
       {/* Page footer */}
       <div className="mt-16 pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 dark:text-slate-600">

@@ -137,6 +137,7 @@ export const loadSkills = async (userId) => {
 // PUBLIC VIEW — load by username
 // ============================================================
 export const loadPublicProfile = async (username) => {
+  if (!username || typeof username !== "string") return null;
   try {
     const usersRef = collection(db, "users");
 

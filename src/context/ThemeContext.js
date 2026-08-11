@@ -5,12 +5,20 @@ const ThemeContext = createContext();
 export function ThemeProvider({ children }) {
   const [isDark, setIsDark] = useState(() => {
     // Remember user's preference from last visit
-    const saved = localStorage.getItem("theme");
-    return saved ? saved === "dark" : true;
+    try {
+      const saved = localStorage.getItem("theme");
+      return saved ? saved === "dark" : true;
+    } catch {
+      return true;
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem("theme", isDark ? "dark" : "light");
+    try {
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    } catch {
+      // Storage unavailable (private mode / disabled) — theme still applies for the session
+    }
     document.documentElement.classList.toggle("dark", isDark);
   }, [isDark]);
 

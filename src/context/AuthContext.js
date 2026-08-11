@@ -11,11 +11,20 @@ export function AuthProvider({ children }) {
   const [dataLoaded, setDataLoaded] = useState(false);
 
   useEffect(() => {
+    // Guards against out-of-order auth events (e.g. rapid account switch or
+    // login→logout): only the most recent event is allowed to commit data.
+    let activeUid = null;
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
+        activeUid = firebaseUser.uid;
         try {
           // Load ALL data from Firestore and merge into localStorage
           const firestoreData = await loadAllUserData(firebaseUser.uid);
+
+          // A newer auth event superseded this one while we were awaiting —
+          // don't clobber localStorage or setUser with stale data.
+          if (activeUid !== firebaseUser.uid) return;
 
           if (firestoreData) {
             // Merge Firestore data into localStorage — Firestore wins on conflicts
@@ -35,7 +44,7 @@ export function AuthProvider({ children }) {
             }
 
             // Sync skills
-            if (firestoreData.skills) {
+            if (Array.isArray(firestoreData.skills)) {
               localStorage.setItem("user_skills", JSON.stringify(firestoreData.skills));
               // Also build skills_data grouped object
               const grouped = {};
@@ -67,6 +76,7 @@ export function AuthProvider({ children }) {
 
         setUser(firebaseUser);
       } else {
+        activeUid = null;
         setUser(null);
         // Don't clear localStorage on logout — preserve for next login
       }

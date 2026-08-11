@@ -111,7 +111,7 @@ export default function UserSetup() {
     return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase();
   };
 
-  const initials = getInitials(fullName || "KI");
+  const initials = getInitials(fullName || "SH");
 
   const toggleSkill = (skill) => {
     setSelectedSkills((prev) =>

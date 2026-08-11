@@ -343,11 +343,13 @@ export default function ProjectCard({ project, index, onDelete, isCustom }) {
             >
               View Details
             </Link>
-            <a href={project.github} target="_blank" rel="noreferrer"
-              className="flex-1 text-center text-xs tracking-widest uppercase py-2 border border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 rounded-lg hover:border-slate-400 transition-all duration-200"
-            >
-              GitHub
-            </a>
+            {project.github && project.github !== "#" && (
+              <a href={project.github} target="_blank" rel="noreferrer"
+                className="flex-1 text-center text-xs tracking-widest uppercase py-2 border border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 rounded-lg hover:border-slate-400 transition-all duration-200"
+              >
+                GitHub
+              </a>
+            )}
           </div>
         </div>
       </motion.div>

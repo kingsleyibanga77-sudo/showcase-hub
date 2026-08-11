@@ -30,10 +30,10 @@ function MiniCarousel({ images, title }) {
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
       {hasMultiple && (
         <>
-          <button onClick={() => setCurrent((p) => p === 0 ? safeImages.length - 1 : p - 1)}
+          <button aria-label="Previous image" onClick={() => setCurrent((p) => p === 0 ? safeImages.length - 1 : p - 1)}
             className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 text-white text-xs flex items-center justify-center backdrop-blur-sm"
           >‹</button>
-          <button onClick={() => setCurrent((p) => p === safeImages.length - 1 ? 0 : p + 1)}
+          <button aria-label="Next image" onClick={() => setCurrent((p) => p === safeImages.length - 1 ? 0 : p + 1)}
             className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 text-white text-xs flex items-center justify-center backdrop-blur-sm"
           >›</button>
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
@@ -280,7 +280,7 @@ export default function PublicView() {
               <div className="w-24 h-24 rounded-full flex items-center justify-center text-white font-black text-2xl"
                 style={{ background: `linear-gradient(135deg, ${color1}, ${color2})`, boxShadow: `0 0 30px ${color1}40` }}
               >
-                {prefs.initials || displayName[0]?.toUpperCase() || "K"}
+                {prefs.initials || displayName[0]?.toUpperCase() || "S"}
               </div>
             )}
           </motion.div>

@@ -110,7 +110,7 @@ function FloatingImage({ onImageClick, profileImage, isDark, badges }) {
       >
         <div className={`w-full h-full rounded-full overflow-hidden relative ${isDark ? "bg-slate-900" : "bg-slate-100"}`}>
           <img
-            src={profileImage || "https://placehold.co/200x200/0f172a/06b6d4?text=KI"}
+            src={profileImage || "https://placehold.co/200x200/0f172a/06b6d4?text=SH"}
             alt="Profile"
             className="w-full h-full object-cover rounded-full"
           />
@@ -275,6 +275,7 @@ export default function Landing() {
   const usernameLast = usernameParts.slice(1).join(" ") || "";
 
   const tagline = prefs?.tagline || "Developer · Data Engineer · Web3 Builder";
+  const bio = prefs?.bio || "Building and showcasing projects worth sharing. A growing portfolio of the work I'm proud of.";
   const badges = prefs?.badges || ["React", "Node.js", "Web3", "Python", "Data"];
   const stats = prefs?.stats || [
     { value: "3+", label: "Years Exp." },
@@ -409,7 +410,7 @@ export default function Landing() {
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
             className={`max-w-sm leading-relaxed mb-8 text-sm ${isDark ? "text-slate-500" : "text-slate-500"}`}
           >
-            I build scalable web apps, data pipelines, and Web3 solutions. Turning complex problems into clean, elegant code.
+            {bio}
           </motion.p>
 
           {/* Buttons */}

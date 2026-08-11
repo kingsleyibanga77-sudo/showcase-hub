@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { collection, getDocs, doc, deleteDoc, updateDoc, getDoc } from "firebase/firestore";
+import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
 import { db, auth } from "../firebase";
 
 // ============================================================
@@ -47,7 +47,7 @@ function UserModal({ user, onClose, onDelete }) {
       >
         <div className="flex justify-between items-center mb-5">
           <h3 className="text-white font-black text-lg">User Details</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-200 text-xl">✕</button>
+          <button aria-label="Close" onClick={onClose} className="text-slate-400 hover:text-slate-200 text-xl">✕</button>
         </div>
 
         {/* Profile */}
