@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
+import defaultProjects from "../data/projects";
 
 export default function Navbar({ onAddProject }) {
   const [scrolled, setScrolled] = useState(false);
@@ -30,7 +31,6 @@ export default function Navbar({ onAddProject }) {
       const customProjects = custom ? JSON.parse(custom) : [];
       const deleted = localStorage.getItem("deleted_default_projects");
       const deletedIds = deleted ? JSON.parse(deleted) : [];
-      const { default: defaultProjects } = require("../data/projects");
       const visibleDefaults = defaultProjects.filter((p) => !deletedIds.includes(p.id));
       return [...visibleDefaults, ...customProjects];
     } catch { return []; }

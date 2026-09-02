@@ -26,12 +26,15 @@ function ImageModal({ onClose, onSave, onDelete, currentImage }) {
       onClick={onClose}
     >
       <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profile-image-dialog-title"
         onClick={(e) => e.stopPropagation()}
         className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-md shadow-2xl"
       >
         <div className="flex justify-between items-center mb-5">
-          <h3 className="text-white font-black text-lg">Change Profile Image</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-200 text-xl">✕</button>
+          <h3 id="profile-image-dialog-title" className="text-white font-black text-lg">Change Profile Image</h3>
+          <button type="button" onClick={onClose} aria-label="Close image dialog" className="text-slate-400 hover:text-slate-200 text-xl">✕</button>
         </div>
         <div className="flex gap-2 mb-5">
           {["url", "upload"].map((t) => (
@@ -70,12 +73,12 @@ function ImageModal({ onClose, onSave, onDelete, currentImage }) {
         )}
         <div className="flex gap-3">
           {currentImage && !currentImage.includes("placehold") && (
-            <button onClick={() => { onDelete(); onClose(); }}
+            <button type="button" onClick={() => { onDelete(); onClose(); }} aria-label="Remove profile image"
               className="px-4 py-2.5 border border-red-500/30 text-red-400 rounded-xl text-sm hover:bg-red-500/10 transition-all"
             >🗑️</button>
           )}
-          <button onClick={onClose} className="flex-1 py-2.5 border border-slate-700 text-slate-400 rounded-xl text-sm">Cancel</button>
-          <button onClick={() => { if (url) { onSave(url); onClose(); } }} disabled={!url}
+          <button type="button" onClick={onClose} className="flex-1 py-2.5 border border-slate-700 text-slate-400 rounded-xl text-sm">Cancel</button>
+          <button type="button" onClick={() => { if (url) { onSave(url); onClose(); } }} disabled={!url}
             className="flex-1 py-2.5 bg-cyan-500 text-white rounded-xl text-sm font-semibold hover:bg-cyan-400 transition-all disabled:opacity-40"
           >Save</button>
         </div>
@@ -103,8 +106,8 @@ function FloatingImage({ onImageClick, profileImage, isDark, badges }) {
         className="absolute w-32 h-32 md:w-52 md:h-52 rounded-full bg-cyan-500/15 blur-3xl"
       />
 
-      <motion.div animate={{ y: [-8, 8, -8] }} transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-        className="relative z-10 w-32 h-32 md:w-48 md:h-48 rounded-full p-[3px] cursor-pointer group"
+      <motion.button type="button" aria-label="Change profile image" whileFocus={{ scale: 1.03 }} animate={{ y: [-8, 8, -8] }} transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
+        className="relative z-10 w-32 h-32 md:w-48 md:h-48 rounded-full border-0 bg-transparent p-[3px] cursor-pointer group"
         style={{ background: "linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6)" }}
         onClick={onImageClick}
       >
@@ -118,7 +121,7 @@ function FloatingImage({ onImageClick, profileImage, isDark, badges }) {
             <p className="text-white text-xs font-semibold">📷 Change</p>
           </div>
         </div>
-      </motion.div>
+      </motion.button>
 
       {/* Desktop badges */}
       <div className="hidden md:block">
@@ -318,7 +321,7 @@ export default function Landing() {
     <div
       ref={ref}
       onMouseMove={handleMouseMove}
-      className={`relative min-h-screen overflow-hidden cursor-none flex flex-col transition-colors duration-300 ${
+      className={`relative min-h-screen overflow-hidden flex flex-col transition-colors duration-300 ${
         isDark ? "bg-slate-950" : "bg-slate-50"
       }`}
     >
@@ -423,7 +426,7 @@ export default function Landing() {
               />
             )}
 
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
+            <motion.button type="button" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
               onMouseEnter={() => setHoveredBtn("explore")}
               onMouseLeave={() => setHoveredBtn(null)}
               onClick={() => navigate("/projects")}
@@ -432,7 +435,7 @@ export default function Landing() {
               Explore Work
             </motion.button>
 
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
+            <motion.button type="button" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
               onMouseEnter={() => setHoveredBtn("github")}
               onMouseLeave={() => setHoveredBtn(null)}
               onClick={() => window.open(prefs?.githubUsername ? `https://github.com/${prefs.githubUsername}` : "https://github.com", "_blank")}
@@ -445,7 +448,7 @@ export default function Landing() {
               GitHub
             </motion.button>
 
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
+            <motion.button type="button" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
               onMouseEnter={() => setHoveredBtn("share")}
               onMouseLeave={() => setHoveredBtn(null)}
               onClick={() => {

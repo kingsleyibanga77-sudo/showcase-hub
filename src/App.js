@@ -228,7 +228,7 @@ function ThemedApp() {
   const { user } = useAuth();
 
   return (
-    <div className={`${isDark ? "dark bg-slate-950" : "bg-slate-100"} min-h-screen cursor-none transition-colors duration-300`}>
+    <div className={`${isDark ? "dark bg-slate-950" : "bg-slate-100"} min-h-screen transition-colors duration-300`}>
       <CursorFollower />
       {loading && <LoadingScreen onComplete={() => setLoading(false)} user={user} />}
       {!loading && <AnimatedRoutes />}

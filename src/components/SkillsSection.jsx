@@ -60,28 +60,6 @@ const AVAILABLE_SKILLS = {
 // ============================================================
 // DEFAULT SKILLS STATE
 // ============================================================
-// const DEFAULT_SKILLS = {
-//   Frontend: [
-//     { name: "HTML", level: 90, icon: "🌐", projects: ["Portfolio Site", "Showcase Hub"] },
-//     { name: "CSS", level: 85, icon: "🎨", projects: ["Portfolio Site", "Showcase Hub"] },
-//     { name: "React", level: 70, icon: "⚛️", projects: ["Portfolio Site", "Showcase Hub", "Expense Tracker"] },
-//     { name: "Tailwind", level: 70, icon: "💨", projects: ["Portfolio Site", "Showcase Hub"] },
-//   ],
-//   Backend: [
-//     { name: "JavaScript", level: 75, icon: "🟨", projects: ["Portfolio Site", "Showcase Hub", "Expense Tracker"] },
-//     { name: "Node.js", level: 65, icon: "🟢", projects: ["Expense Tracker", "Explain My Data"] },
-//     { name: "Python", level: 65, icon: "🐍", projects: ["Explain My Data"] },
-//   ],
-//   Blockchain: [
-//     { name: "Web3", level: 60, icon: "🌍", projects: ["Web3 Voting App"] },
-//     { name: "Solidity", level: 60, icon: "💎", projects: ["Web3 Voting App"] },
-//   ],
-//   Tools: [
-//     { name: "Git", level: 80, icon: "🔀", projects: ["Portfolio Site", "Showcase Hub", "Expense Tracker"] },
-//     { name: "GitHub", level: 80, icon: "🐙", projects: ["Portfolio Site", "Showcase Hub", "Expense Tracker"] },
-//   ],
-// };
-
 const categoryEmojis = {
   Frontend: "🎨",
   Backend: "⚙️",
@@ -635,7 +613,6 @@ export default function SkillsSection({ activeSkills, toggleSkill, clearSkills, 
       return updated;
     });
   };
-
 
   return (
     <>
