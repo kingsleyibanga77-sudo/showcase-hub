@@ -247,12 +247,53 @@ function FAQItem({ item, index }) {
 }
 
 function Footer() {
+function Footer() {
+  // Load user social links if logged in
+  const prefs = (() => {
+    try {
+      const saved = localStorage.getItem("user_prefs");
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  })();
+
+  const socialLinks = [
+    {
+      label: "GitHub",
+      href: prefs?.githubUsername
+        ? `https://github.com/${prefs.githubUsername}`
+        : "https://github.com",
+    },
+    {
+      label: "LinkedIn",
+      href: prefs?.linkedinUrl
+        ? `https://linkedin.com/in/${prefs.linkedinUrl}`
+        : "https://linkedin.com",
+    },
+    {
+      label: "Twitter / X",
+      href: prefs?.twitterUrl
+        ? `https://x.com/${prefs.twitterUrl}`
+        : "https://x.com",
+    },
+    {
+      label: "YouTube",
+      href: prefs?.youtubeUrl
+        ? `https://youtube.com/${prefs.youtubeUrl}`
+        : "https://youtube.com",
+    },
+  ];
+
+  const dynamicFooterLinks = {
+    ...FOOTER_LINKS,
+    "Stay Connected": socialLinks.map((s) => ({ ...s, external: true })),
+  };
+
   return (
     <footer className="border-t border-white/5 bg-[#050512]">
       {/* Main footer links */}
       <div className="max-w-6xl mx-auto px-5 md:px-8 py-12 md:py-16">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10">
-          {Object.entries(FOOTER_LINKS).map(([section, links]) => (
+          {Object.entries(dynamicFooterLinks).map(([section, links]) => (
             <div key={section}>
               <h4 className="text-white font-bold text-sm mb-4">{section}</h4>
               <ul className="space-y-2.5">
