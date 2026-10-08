@@ -247,7 +247,6 @@ function FAQItem({ item, index }) {
 }
 
 function Footer() {
-function Footer() {
   // Load user social links if logged in
   const prefs = (() => {
     try {
